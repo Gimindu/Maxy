@@ -257,7 +257,9 @@ Add an entry to `PET_COLORS` in [`src/components/CustomizerModal.tsx`](file:///c
   name: 'Blueberry Swirl',
   hex: '#B8C0FF',
   roughness: 0.82,
-  blushHex: '#FF70A6'
+  blushHex: '#FF70A6',
+  desc: 'Sweet wild blueberry with frosted sugar glaze',
+  tag: 'Berry',
 }
 ```
 
