@@ -207,7 +207,7 @@ export default function App() {
       return
     }
     // Protect active transient moods from being erased by stat changes
-    if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy') {
+    if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy' || mood === 'washing') {
       return
     }
     if (stats.cleanliness < 25) {
@@ -365,24 +365,38 @@ export default function App() {
 
   const handleWash = useCallback(() => {
     if (isSleeping) {
-      showMessage(`${petName} is sleeping!`)
+      showMessage(`${petName} is fast asleep! Wake them first.`)
       return
     }
     sound.playWash()
-    spawnParticles('bubble', 12, [0, 0.2, 0])
-    setStats((prev) => ({
-      ...prev,
-      cleanliness: 100,
-      happiness: Math.min(100, prev.happiness + 8),
-    }))
-    addXP(4)
-    showMessage(`Bubble bath! ${petName} is squeaky clean and sparkly! ✨`)
-    setMood('super_happy')
+    setMood('washing')
+    showMessage(`Scrub scrub! Washing ${petName}'s back with the bath stick! 🧼🛁✨`, 3500)
+
+    // Stream bubbles continuously off the back during scrubbing
+    const bubbleInterval = setInterval(() => {
+      spawnParticles('bubble', 3, [0.1, 0.2, -0.4])
+    }, 320)
+
     setTimeout(() => {
-      if (!isSleeping) {
-        setMood(stats.energy < 30 ? 'sleepy' : 'happy')
-      }
-    }, 1500)
+      clearInterval(bubbleInterval)
+      setStats((prev) => ({
+        ...prev,
+        cleanliness: 100,
+        happiness: Math.min(100, prev.happiness + 12),
+      }))
+      addXP(5)
+      setMood('super_happy')
+      sound.playLevelUp()
+      spawnParticles('star', 6, [0, 0.4, 0.3])
+      spawnParticles('bubble', 8, [0, 0.2, 0])
+      showMessage(`✨ Squeaky clean! ${petName}'s back is sparkling fresh! 🛁💖`, 3000)
+
+      setTimeout(() => {
+        if (!isSleeping) {
+          setMood(stats.energy < 30 ? 'sleepy' : 'happy')
+        }
+      }, 1500)
+    }, 2400)
   }, [isSleeping, stats.energy, addXP, showMessage, spawnParticles, petName])
 
   const handleSleep = useCallback(() => {

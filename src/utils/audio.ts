@@ -131,25 +131,26 @@ class SoundManager {
     if (!this.ctx) return
 
     const now = this.ctx.currentTime
-    // Pop bubbles
-    ;[0, 0.08, 0.16].forEach((offset, i) => {
+    // Rhythmic bubbly spa wash scrub sequence
+    const scrubTimes = [0, 0.22, 0.44, 0.68, 0.94, 1.22, 1.50]
+    scrubTimes.forEach((offset, idx) => {
       if (!this.ctx) return
       const osc = this.ctx.createOscillator()
       const gain = this.ctx.createGain()
 
       osc.type = 'sine'
-      const freq = 600 + i * 150
+      const freq = 540 + (idx % 3) * 130
       osc.frequency.setValueAtTime(freq, now + offset)
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + offset + 0.05)
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + offset + 0.06)
 
-      gain.gain.setValueAtTime(0.15, now + offset)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.07)
+      gain.gain.setValueAtTime(0.14, now + offset)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.16)
 
       osc.connect(gain)
       gain.connect(this.ctx.destination)
 
       osc.start(now + offset)
-      osc.stop(now + offset + 0.07)
+      osc.stop(now + offset + 0.16)
     })
   }
 

@@ -116,6 +116,7 @@ maxy/
         ├── Scene.tsx            # R3F Canvas, lighting, and contact shadows
         ├── PetMesh.tsx          # 3D squishy body, spring physics, cursor tracking
         ├── Accessories.tsx      # 3D Crowns, Bunny Ears, Chef Hats, Shades, Halos
+        ├── WashStick3D.tsx      # 3D Arm and long-handled bath scrubber stick for washing back
         ├── Particles3D.tsx      # 3D Hearts, Stars, Bubbles, Zzz, and Crumbs
         ├── Treat3D.tsx          # Animated 3D flying strawberry treat
         ├── ToyBall.tsx          # Interactive bouncing beach ball
@@ -145,7 +146,8 @@ In [`faceCanvas.ts`](file:///c:/Users/GIMINDU/Videos/Projects/maxy/src/utils/fac
   - `happy`: Wide open eyes with double specular sparkles and curved `:3` mouth.
   - `poked`: Squished `>.<` eyes with tiny `:o` mouth.
   - `anticipating`: Big excited sparkling eyes locked onto the incoming strawberry (`gazeX = 0.45, gazeY = -0.55`), with mouth wide open showing inner pink tongue.
-  - `eating`: Rhythmic chewing animation alternating between an open chomping mouth with visible strawberry morsels, pink tongue, biting down onto closed wavy cat-lips `:3`, cheek puffs, squinting bouncing eyes `^ ^`, and hopping crumbs.
+  - `eating`: Sweet closed-mouth nibble with gentle happy wiggle, cheek puffs, and floating hearts.
+  - `washing`: Maxy turns around ~130° to present their back for a bath; an arm emerges holding a long wooden wash stick with an ocean-teal loofah sponge and fluffy white lather, scrubbing the back up and down while Maxy winks back over their shoulder.
   - `sleepy`: Heavy droopy eyelids, animated yawning mouth stretching wide with tiredness teardrops, and synthesized vocalized yawning sound when energy < 30%.
   - `sleeping`: Relaxed `u_u` crescent eyes and calm resting breath.
   - `dirty`: Smudge dirt spots appear over the face.

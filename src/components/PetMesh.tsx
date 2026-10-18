@@ -5,6 +5,7 @@ import { RoundedBox } from '@react-three/drei'
 import { PetColor, PetMood, AccessoryType } from '../types/pet'
 import { DynamicFaceTexture } from '../utils/faceCanvas'
 import { Accessories } from './Accessories'
+import { WashStick3D } from './WashStick3D'
 
 interface PetMeshProps {
   mood: PetMood
@@ -106,14 +107,17 @@ export function PetMesh({
     groupRef.current.scale.copy(scaleRef.current)
 
     // Floating position
-    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
-    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
+    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
+    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
     let targetY = Math.sin(t * floatSpeed) * floatHeight
     if (mood === 'anticipating') {
       targetY = 0 // Centered mouth height for incoming treat
     } else if (mood === 'eating') {
       // Gentle sweet happy wiggle of delight
       targetY = Math.sin(t * 9) * 0.02
+    } else if (mood === 'washing') {
+      // Playful bath scrub wiggle
+      targetY = Math.sin(t * 11) * 0.025
     }
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.12)
 
@@ -136,6 +140,12 @@ export function PetMesh({
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.02 + chewBob, 0.15)
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, chewWiggle, 0.15)
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -chewWiggle * 0.5, 0.15)
+    } else if (mood === 'washing') {
+      // Pet turns around ~130 degrees to present their back for washing, looking back over shoulder!
+      const washTickle = Math.sin(t * 11) * 0.03
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.04 + washTickle, 0.12)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.PI * 0.72, 0.12)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -washTickle * 0.8, 0.12)
     } else if (mood === 'sleepy') {
       // Drowsy sluggish follow with gentle tired head-drop nod
       const sleepNod = Math.sin(t * 1.4) * 0.06 + 0.05
@@ -164,6 +174,10 @@ export function PetMesh({
       // Eyes eagerly locked on incoming strawberry from bottom-right!
       gazeX = 0.45
       gazeY = -0.55
+    } else if (mood === 'washing') {
+      // Eyes looking back over shoulder toward user
+      gazeX = -0.5
+      gazeY = 0.15
     }
     faceGenerator.update(mood, gazeX, gazeY, delta, color.blushHex)
   })
@@ -227,6 +241,9 @@ export function PetMesh({
         petScale={[scaleRef.current.x, scaleRef.current.y, scaleRef.current.z]} 
         isSleeping={isSleeping}
       />
+
+      {/* 3D Wash Arm & Wash Stick for washing back */}
+      {mood === 'washing' && <WashStick3D color={color} />}
     </group>
   )
 }

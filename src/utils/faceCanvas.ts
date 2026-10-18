@@ -125,9 +125,29 @@ export class DynamicFaceTexture {
       ctx.arc(leftEyeX, eyeY + 4 + chewSquint, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
 
+    } else if (mood === 'washing') {
+      // Blissful bath eyes: happy smiling eyes with a playful wink looking back over shoulder
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 10
+      ctx.lineCap = 'round'
+
+      // Left eye: cheerful wink curve ^
       ctx.beginPath()
-      ctx.arc(rightEyeX, eyeY + 4 + chewSquint, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
+      ctx.arc(leftEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
+
+      // Right eye: sparkling open eye looking back over shoulder
+      ctx.fillStyle = '#231B26'
+      ctx.beginPath()
+      ctx.ellipse(rightEyeX - 3, eyeY + 2, eyeRadius * 0.95, eyeRadius * 1.05, 0, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Sparkle highlight
+      ctx.fillStyle = '#FFFFFF'
+      ctx.beginPath()
+      ctx.arc(rightEyeX - 9, eyeY - 4, eyeRadius * 0.38, 0, Math.PI * 2)
+      ctx.arc(rightEyeX + 7, eyeY + 8, eyeRadius * 0.18, 0, Math.PI * 2)
+      ctx.fill()
     } else if (mood === 'anticipating') {
       // Big excited open sparkling eyes focused on incoming treat!
       ;[leftEyeX, rightEyeX].forEach((ex) => {
@@ -358,6 +378,26 @@ export class DynamicFaceTexture {
       ctx.beginPath()
       ctx.arc(mouthX + curveR - 1, mouthY - 3 - nibbleWiggle, curveR, 0.15, Math.PI * 0.8)
       ctx.stroke()
+    } else if (mood === 'washing') {
+      // Sweet contented cat smile with an adorable floating bath soap bubble near the cheek
+      const curveR = 14
+      ctx.beginPath()
+      ctx.arc(mouthX - curveR, mouthY - 4, curveR, 0.2, Math.PI * 0.85)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.arc(mouthX + curveR, mouthY - 4, curveR, 0.15, Math.PI * 0.8)
+      ctx.stroke()
+
+      // Cute iridescent soap bubble near the cheek
+      ctx.fillStyle = 'rgba(112, 214, 255, 0.75)'
+      ctx.beginPath()
+      ctx.arc(mouthX + 34, mouthY - 14, 9, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.fillStyle = '#FFFFFF'
+      ctx.beginPath()
+      ctx.arc(mouthX + 31, mouthY - 17, 3, 0, Math.PI * 2)
+      ctx.fill()
     } else if (mood === 'super_happy') {
       // Big open happy mouth with tongue
       ctx.fillStyle = '#FF5277'
