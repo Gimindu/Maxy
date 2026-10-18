@@ -214,7 +214,7 @@ export function PetMesh({
       </RoundedBox>
 
       {/* 3D Cartoon Dirt Patches & Low Hygiene Effects */}
-      <DirtPatches3D cleanliness={cleanliness} />
+      <DirtPatches3D cleanliness={cleanliness} isWashing={mood === 'washing'} />
 
       {/* Face plane hovering slightly in front of body */}
       <mesh position={[0, 0, 1.015]}>

@@ -95,73 +95,78 @@ export class DynamicFaceTexture {
     ctx.fill()
     ctx.restore()
 
-    // Calculate dirt intensity
-    let dirtFactor = Math.max(0, Math.min(1, (75 - cleanliness) / 55))
-    if (mood === 'dirty') {
-      dirtFactor = Math.max(dirtFactor, 0.75)
+    // Calculate dirt intensity smoothly scaling down to 95% cleanliness
+    let dirtFactor = Math.max(0, Math.min(1, (95 - cleanliness) / 75))
+    if (mood === 'dirty' && cleanliness < 35) {
+      dirtFactor = Math.max(dirtFactor, 0.45)
     }
 
-    // Dirt spots and mud smudges when hygiene is low
-    if (dirtFactor > 0.05) {
+    // Dirt spots and mud smudges when hygiene is low (shrinks smoothly down to tiny specks)
+    if (dirtFactor > 0.005) {
+      const shrinkScale = Math.pow(dirtFactor, 1.35)
+      const smudgeOpacity = Math.min(0.92, dirtFactor * 1.05)
+
       // 1. Left cheek mud smudge & splatters
-      ctx.fillStyle = `rgba(102, 68, 34, ${0.65 * dirtFactor})`
+      ctx.fillStyle = `rgba(102, 68, 34, ${0.65 * smudgeOpacity})`
       ctx.beginPath()
-      ctx.ellipse(leftCheekX - 10, cheekY - 4, 18 * dirtFactor, 12 * dirtFactor, 0.35, 0, Math.PI * 2)
+      ctx.ellipse(leftCheekX - 10, cheekY - 4, 18 * shrinkScale, 12 * shrinkScale, 0.35, 0, Math.PI * 2)
       ctx.fill()
 
       // Darker core
-      ctx.fillStyle = `rgba(74, 46, 20, ${0.8 * dirtFactor})`
+      ctx.fillStyle = `rgba(74, 46, 20, ${0.8 * smudgeOpacity})`
       ctx.beginPath()
-      ctx.ellipse(leftCheekX - 10, cheekY - 4, 10 * dirtFactor, 6 * dirtFactor, 0.35, 0, Math.PI * 2)
+      ctx.ellipse(leftCheekX - 10, cheekY - 4, 10 * shrinkScale, 6 * shrinkScale, 0.35, 0, Math.PI * 2)
       ctx.fill()
 
       // Speckles near left cheek
-      ctx.fillStyle = `rgba(90, 58, 28, ${0.7 * dirtFactor})`
+      ctx.fillStyle = `rgba(90, 58, 28, ${0.7 * smudgeOpacity})`
       ctx.beginPath()
-      ctx.arc(leftCheekX - 28, cheekY - 14, 3.5 * dirtFactor, 0, Math.PI * 2)
-      ctx.arc(leftCheekX - 4, cheekY + 12, 4 * dirtFactor, 0, Math.PI * 2)
-      ctx.arc(leftCheekX - 24, cheekY + 8, 2.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.arc(leftCheekX - 28, cheekY - 14, 3.5 * shrinkScale, 0, Math.PI * 2)
+      ctx.arc(leftCheekX - 4, cheekY + 12, 4 * shrinkScale, 0, Math.PI * 2)
+      ctx.arc(leftCheekX - 24, cheekY + 8, 2.5 * shrinkScale, 0, Math.PI * 2)
       ctx.fill()
 
       // 2. Right cheek grimy smudge & scratch streaks
-      ctx.fillStyle = `rgba(102, 68, 34, ${0.58 * dirtFactor})`
+      ctx.fillStyle = `rgba(102, 68, 34, ${0.58 * smudgeOpacity})`
       ctx.beginPath()
-      ctx.ellipse(rightCheekX + 10, cheekY - 6, 16 * dirtFactor, 10 * dirtFactor, -0.3, 0, Math.PI * 2)
+      ctx.ellipse(rightCheekX + 10, cheekY - 6, 16 * shrinkScale, 10 * shrinkScale, -0.3, 0, Math.PI * 2)
       ctx.fill()
 
       // Cute cartoon dirt scratch streaks on right cheek
-      ctx.strokeStyle = `rgba(80, 50, 22, ${0.75 * dirtFactor})`
-      ctx.lineWidth = 3.5 * dirtFactor
-      ctx.lineCap = 'round'
-      ctx.beginPath()
-      ctx.moveTo(rightCheekX + 2, cheekY - 14)
-      ctx.lineTo(rightCheekX + 22, cheekY - 5)
-      ctx.moveTo(rightCheekX + 4, cheekY - 2)
-      ctx.lineTo(rightCheekX + 25, cheekY + 7)
-      ctx.stroke()
+      if (shrinkScale > 0.15) {
+        ctx.strokeStyle = `rgba(80, 50, 22, ${0.75 * smudgeOpacity})`
+        ctx.lineWidth = Math.max(1, 3.5 * shrinkScale)
+        ctx.lineCap = 'round'
+        ctx.beginPath()
+        ctx.moveTo(rightCheekX + 2, cheekY - 14)
+        ctx.lineTo(rightCheekX + 22, cheekY - 5)
+        ctx.moveTo(rightCheekX + 4, cheekY - 2)
+        ctx.lineTo(rightCheekX + 25, cheekY + 7)
+        ctx.stroke()
+      }
 
       // 3. Forehead mud dab & speckles
-      ctx.fillStyle = `rgba(95, 62, 30, ${0.62 * dirtFactor})`
+      ctx.fillStyle = `rgba(95, 62, 30, ${0.62 * smudgeOpacity})`
       ctx.beginPath()
-      ctx.ellipse(width * 0.44, eyeY - 46, 18 * dirtFactor, 9 * dirtFactor, -0.15, 0, Math.PI * 2)
+      ctx.ellipse(width * 0.44, eyeY - 46, 18 * shrinkScale, 9 * shrinkScale, -0.15, 0, Math.PI * 2)
       ctx.fill()
 
       ctx.beginPath()
-      ctx.arc(width * 0.54, eyeY - 40, 4.5 * dirtFactor, 0, Math.PI * 2)
-      ctx.arc(width * 0.36, eyeY - 42, 3.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.arc(width * 0.54, eyeY - 40, 4.5 * shrinkScale, 0, Math.PI * 2)
+      ctx.arc(width * 0.36, eyeY - 42, 3.5 * shrinkScale, 0, Math.PI * 2)
       ctx.fill()
 
       // 4. Little snout / chin mud dab
-      ctx.fillStyle = `rgba(90, 56, 26, ${0.65 * dirtFactor})`
+      ctx.fillStyle = `rgba(90, 56, 26, ${0.65 * smudgeOpacity})`
       ctx.beginPath()
-      ctx.arc(mouthX - 20, mouthY + 14, 5 * dirtFactor, 0, Math.PI * 2)
-      ctx.arc(mouthX + 22, mouthY + 12, 4.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.arc(mouthX - 20, mouthY + 14, 5 * shrinkScale, 0, Math.PI * 2)
+      ctx.arc(mouthX + 22, mouthY + 12, 4.5 * shrinkScale, 0, Math.PI * 2)
       ctx.fill()
 
       // 5. Comical cartoon grime cross on forehead when very dirty
       if (dirtFactor > 0.6) {
-        ctx.strokeStyle = `rgba(70, 42, 18, ${0.85 * dirtFactor})`
-        ctx.lineWidth = 3
+        ctx.strokeStyle = `rgba(70, 42, 18, ${0.85 * smudgeOpacity})`
+        ctx.lineWidth = Math.max(1, 3 * shrinkScale)
         ctx.beginPath()
         ctx.moveTo(width * 0.62 - 7, eyeY - 44)
         ctx.lineTo(width * 0.62 + 7, eyeY - 44)

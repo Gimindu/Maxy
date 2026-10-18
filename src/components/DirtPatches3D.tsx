@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 
 interface DirtPatches3DProps {
   cleanliness: number
+  isWashing?: boolean
 }
 
 // Single organic cartoon mud blob with main core and satellite splatters
@@ -175,23 +176,37 @@ function StinkWisps() {
   )
 }
 
-export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
-  // Dirt starts becoming visible when cleanliness drops below 75%
-  if (cleanliness >= 75) return null
+export function DirtPatches3D({ cleanliness, isWashing = false }: DirtPatches3DProps) {
+  const groupRef = useRef<THREE.Group>(null)
+  const currentScale = useRef(0)
 
-  // Intensity from 0 (at 75%) to 1.0 (at 10% or less)
-  const intensity = Math.max(0.12, Math.min(1.0, (75 - cleanliness) / 60))
-  const scale = 0.45 + intensity * 0.65
-  const opacity = 0.35 + intensity * 0.58
+  // Smooth continuous dirt factor from 0.0 at 95% cleanliness to 1.0 at 15%
+  const dirtFactor = Math.max(0, Math.min(1.0, (95 - cleanliness) / 80))
+  // Smooth power curve so dirt gradually shrinks down to tiny specks without popping
+  const targetScale = Math.pow(dirtFactor, 1.35) * 1.15
+  const opacity = Math.min(0.92, Math.max(0.08, dirtFactor * 1.1))
+
+  // While washing, back mud blobs that get scrubbed by the loofah sponge shrink faster
+  const backScrubMultiplier = isWashing ? 0.65 : 1.0
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return
+    // Continuous frame-by-frame lerp interpolation for silky smooth shrinking
+    const lerpSpeed = isWashing ? delta * 5.5 : delta * 8.5
+    currentScale.current = THREE.MathUtils.lerp(currentScale.current, targetScale, lerpSpeed)
+
+    groupRef.current.scale.setScalar(currentScale.current)
+    groupRef.current.visible = currentScale.current > 0.005
+  })
 
   return (
-    <group name="dirt-patches-3d">
+    <group ref={groupRef} name="dirt-patches-3d">
       {/* --- FRONT BODY DIRT --- */}
       {/* Lower belly mud patch */}
       <MudBlob
         position={[-0.38, -0.62, 1.012]}
         rotation={[0.1, -0.05, 0.2]}
-        scale={scale * 0.9}
+        scale={0.9}
         opacity={opacity}
         splatterCount={2}
       />
@@ -200,7 +215,7 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[-0.55, 0.72, 1.008]}
         rotation={[-0.12, 0.1, -0.3]}
-        scale={scale * 0.82}
+        scale={0.82}
         opacity={opacity}
         splatterCount={3}
       />
@@ -210,7 +225,7 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[-0.55, -0.84, 0.42]}
         rotation={[-0.4, 0, 0]}
-        scale={scale * 0.7}
+        scale={0.7}
         opacity={opacity * 0.95}
         splatterCount={1}
       />
@@ -219,7 +234,7 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[0.55, -0.84, 0.42]}
         rotation={[-0.4, 0, 0]}
-        scale={scale * 0.75}
+        scale={0.75}
         opacity={opacity * 0.95}
         splatterCount={2}
       />
@@ -229,7 +244,7 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[-1.012, -0.08, 0.15]}
         rotation={[0, -Math.PI / 2, 0.4]}
-        scale={scale * 1.05}
+        scale={1.05}
         opacity={opacity}
         splatterCount={3}
       />
@@ -238,7 +253,7 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[1.012, 0.18, -0.22]}
         rotation={[0, Math.PI / 2, -0.25]}
-        scale={scale * 0.95}
+        scale={0.95}
         opacity={opacity}
         splatterCount={2}
       />
@@ -247,18 +262,18 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[0.38, 1.012, 0.12]}
         rotation={[-Math.PI / 2, 0, 0.5]}
-        scale={scale * 0.88}
+        scale={0.88}
         opacity={opacity}
         splatterCount={3}
       />
 
-      {/* --- BACK OF BODY (Target for the wash stick!) --- */}
+      {/* --- BACK OF BODY (Target for the wash stick loofah sponge!) --- */}
       {/* Upper back shoulder */}
       <MudBlob
         position={[0.28, 0.48, -1.012]}
         rotation={[0, Math.PI, -0.3]}
-        scale={scale * 1.15}
-        opacity={opacity}
+        scale={1.15 * backScrubMultiplier}
+        opacity={opacity * backScrubMultiplier}
         splatterCount={3}
       />
 
@@ -266,8 +281,8 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[-0.32, 0.12, -1.012]}
         rotation={[0, Math.PI, 0.4]}
-        scale={scale * 1.05}
-        opacity={opacity}
+        scale={1.05 * backScrubMultiplier}
+        opacity={opacity * backScrubMultiplier}
         splatterCount={3}
       />
 
@@ -275,13 +290,13 @@ export function DirtPatches3D({ cleanliness }: DirtPatches3DProps) {
       <MudBlob
         position={[0.15, -0.45, -1.012]}
         rotation={[0, Math.PI, 0.1]}
-        scale={scale * 0.9}
-        opacity={opacity}
+        scale={0.9 * backScrubMultiplier}
+        opacity={opacity * backScrubMultiplier}
         splatterCount={2}
       />
 
-      {/* --- VERY DIRTY EFFECTS (Cleanliness < 25) --- */}
-      {cleanliness < 25 && (
+      {/* --- VERY DIRTY EFFECTS (Cleanliness < 25, flies shoo away when washing starts) --- */}
+      {!isWashing && cleanliness < 25 && (
         <>
           <BuzzingFly />
           <StinkWisps />

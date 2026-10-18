@@ -377,8 +377,29 @@ export default function App() {
       spawnParticles('bubble', 3, [0.55, 0.68, -0.35])
     }, 320)
 
+    // Smoothly dissolve dirt and increase cleanliness step-by-step
+    const startClean = stats.cleanliness
+    const washDuration = 2100
+    const startTime = performance.now()
+
+    const washProgInterval = setInterval(() => {
+      const elapsed = performance.now() - startTime
+      const progress = Math.min(1, elapsed / washDuration)
+      // Ease out quad: dirt shrinks smoothly as sponge scrubs
+      const ease = 1 - (1 - progress) * (1 - progress)
+      const currentClean = Math.min(100, Math.round(startClean + (100 - startClean) * ease))
+      setStats((prev) => ({
+        ...prev,
+        cleanliness: currentClean,
+      }))
+      if (progress >= 1) {
+        clearInterval(washProgInterval)
+      }
+    }, 45)
+
     setTimeout(() => {
       clearInterval(bubbleInterval)
+      clearInterval(washProgInterval)
       setStats((prev) => ({
         ...prev,
         cleanliness: 100,
@@ -397,7 +418,7 @@ export default function App() {
         }
       }, 1500)
     }, 2400)
-  }, [isSleeping, stats.energy, addXP, showMessage, spawnParticles, petName])
+  }, [isSleeping, stats.cleanliness, stats.energy, addXP, showMessage, spawnParticles, petName])
 
   const handleSleep = useCallback(() => {
     if (isSleeping) {
