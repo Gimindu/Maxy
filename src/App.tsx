@@ -207,7 +207,7 @@ export default function App() {
       return
     }
     // Protect active transient moods from being erased by stat changes
-    if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy' || mood === 'washing' || mood === 'full') {
+    if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy' || mood === 'washing' || mood === 'full' || mood === 'waking_up') {
       return
     }
     if (stats.cleanliness < 35) {
@@ -252,15 +252,19 @@ export default function App() {
     sound.playPoke()
     if (isSleeping) {
       setIsSleeping(false)
-      setMood('poked')
-      showMessage(`*Poke!* ${petName} woke up! ☀️`)
+      setMood('waking_up')
+      spawnParticles('star', 4, [0, 0.6, 0.3])
+      showMessage(`*Poke!* ${petName} woke up with a big morning stretch! ☀️`, 3200)
+      setTimeout(() => {
+        sound.playPet()
+      }, 700)
       setTimeout(() => {
         if (stats.energy < 30) {
           setMood('sleepy')
         } else {
           setMood(stats.happiness > 80 ? 'happy' : 'idle')
         }
-      }, 700)
+      }, 1900)
     } else {
       setMood('poked')
       setTimeout(() => {
@@ -433,18 +437,22 @@ export default function App() {
     if (isSleeping) {
       setIsSleeping(false)
       sound.playPoke()
-      setMood('happy')
-      spawnParticles('star', 5, [0, 0.7, 0.2])
-      spawnParticles('heart', 2, [0.2, 0.8, 0.2])
+      setMood('waking_up')
+      spawnParticles('star', 6, [0, 0.7, 0.2])
+      spawnParticles('heart', 3, [0.2, 0.8, 0.2])
       showMessage(`*Tug!* You pulled off ${petName}'s nightcap! Good morning! ☀️`, 3500)
-      addXP(3)
+      addXP(4)
+
       setTimeout(() => {
-        if (stats.energy < 30) {
-          setMood('sleepy')
-        } else {
-          setMood(stats.happiness > 80 ? 'happy' : 'idle')
+        sound.playPet()
+        spawnParticles('star', 4, [0, 0.5, 0.3])
+      }, 700)
+
+      setTimeout(() => {
+        if (!isSleeping) {
+          setMood(stats.energy < 30 ? 'sleepy' : stats.happiness > 80 ? 'happy' : 'idle')
         }
-      }, 1200)
+      }, 1900)
     }
   }, [isSleeping, stats.energy, stats.happiness, petName, showMessage, spawnParticles, addXP])
 
@@ -453,8 +461,17 @@ export default function App() {
       // Wake up
       setIsSleeping(false)
       sound.playPoke()
-      setMood('happy')
-      showMessage(`Good morning, ${petName}! Ready to play! ☀️`)
+      setMood('waking_up')
+      spawnParticles('star', 5, [0, 0.7, 0.2])
+      showMessage(`Good morning, ${petName}! Ready to play! ☀️`, 3200)
+      setTimeout(() => {
+        sound.playPet()
+      }, 700)
+      setTimeout(() => {
+        if (!isSleeping) {
+          setMood(stats.energy < 30 ? 'sleepy' : 'happy')
+        }
+      }, 1900)
     } else {
       // Go to sleep
       setIsSleeping(true)
@@ -462,7 +479,7 @@ export default function App() {
       setMood('sleeping')
       showMessage(`Shh... ${petName} is falling fast asleep. 💤`)
     }
-  }, [isSleeping, petName, showMessage])
+  }, [isSleeping, stats.energy, petName, showMessage, spawnParticles])
 
   const handleToggleSound = useCallback(() => {
     setIsMuted((prev) => {

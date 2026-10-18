@@ -11,6 +11,7 @@ export type PetMood =
   | 'dizzy'
   | 'washing'
   | 'full'
+  | 'waking_up'
 
 export type AccessoryType = 
   | 'none' 

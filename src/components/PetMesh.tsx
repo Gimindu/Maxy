@@ -67,12 +67,22 @@ export function PetMesh({
     }
   }, [hitCount])
 
-  // React to full tummy refusal mood
+  // React to full tummy refusal mood & waking up
   const prevMoodRef = useRef(mood)
+  const wakeTimerRef = useRef(0)
+  const hasLandedRef = useRef(false)
+
   useEffect(() => {
     if (mood === 'full' && prevMoodRef.current !== 'full') {
       // Chubby full tummy squish
       scaleRef.current.set(1.15, 0.86, 1.15)
+      velocityRef.current.set(0, 0, 0)
+    }
+    if (mood === 'waking_up' && prevMoodRef.current !== 'waking_up') {
+      wakeTimerRef.current = 0
+      hasLandedRef.current = false
+      // Initial morning stretch
+      scaleRef.current.set(0.92, 1.18, 0.92)
       velocityRef.current.set(0, 0, 0)
     }
     prevMoodRef.current = mood
@@ -117,7 +127,28 @@ export function PetMesh({
     const breathRate = isSleeping ? 1.2 : 2.5
     const breathAmp = isSleeping ? 0.02 : 0.035
     const breathOffset = Math.sin(t * breathRate) * breathAmp
-    const targetScale = new THREE.Vector3(1 - breathOffset * 0.5, 1 + breathOffset, 1 - breathOffset * 0.5)
+    let targetScale = new THREE.Vector3(1 - breathOffset * 0.5, 1 + breathOffset, 1 - breathOffset * 0.5)
+
+    if (mood === 'waking_up') {
+      wakeTimerRef.current += delta
+      if (wakeTimerRef.current < 0.65) {
+        // Morning stretch tall!
+        targetScale = new THREE.Vector3(0.92, 1.18, 0.92)
+      } else {
+        const hopP = Math.min(1, (wakeTimerRef.current - 0.65) / 0.70)
+        if (hopP < 0.85) {
+          // Mid-air joyful stretch
+          targetScale = new THREE.Vector3(0.94, 1.14, 0.94)
+        } else {
+          // Soft squish upon landing
+          targetScale = new THREE.Vector3(1.16, 0.86, 1.16)
+          if (!hasLandedRef.current) {
+            hasLandedRef.current = true
+            triggerSquish(0.72)
+          }
+        }
+      }
+    }
 
     // Euler spring integration
     const diff = new THREE.Vector3().subVectors(targetScale, scaleRef.current)
@@ -136,8 +167,8 @@ export function PetMesh({
     groupRef.current.scale.copy(scaleRef.current)
 
     // Floating position
-    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
-    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
+    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full' || mood === 'waking_up') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
+    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full' || mood === 'waking_up') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
     let targetY = Math.sin(t * floatSpeed) * floatHeight
     if (mood === 'anticipating') {
       targetY = 0 // Centered mouth height for incoming treat
@@ -150,6 +181,15 @@ export function PetMesh({
     } else if (mood === 'full') {
       // Contented belly bounce
       targetY = Math.sin(t * 6) * 0.02
+    } else if (mood === 'waking_up') {
+      if (wakeTimerRef.current < 0.65) {
+        // Subtle morning stretch bob
+        targetY = 0.04
+      } else {
+        // Joyful wake-up jump!
+        const hopP = Math.min(1, (wakeTimerRef.current - 0.65) / 0.70)
+        targetY = Math.sin(hopP * Math.PI) * 0.50
+      }
     }
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.12)
 
@@ -160,6 +200,21 @@ export function PetMesh({
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, sleepTiltZ, 0.05)
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.1, 0.05)
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.08, 0.05)
+    } else if (mood === 'waking_up') {
+      if (wakeTimerRef.current < 0.65) {
+        // Morning stretch lean-back with sleepy wiggle
+        const stretchWiggle = Math.sin(t * 8) * 0.04
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.16, 0.15)
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, stretchWiggle, 0.15)
+        groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -stretchWiggle * 0.5, 0.15)
+      } else {
+        // Joyful mid-air hop & twist!
+        const hopP = Math.min(1, (wakeTimerRef.current - 0.65) / 0.70)
+        const hopTwist = Math.sin(hopP * Math.PI * 2) * 0.32
+        groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.05, 0.2)
+        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, hopTwist, 0.25)
+        groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, Math.sin(hopP * Math.PI) * 0.08, 0.2)
+      }
     } else if (mood === 'full') {
       // Cute rhythmic "no thank you!" head shake and contented belly lean
       const headShake = Math.sin(t * 10) * 0.30

@@ -9,6 +9,7 @@ export class DynamicFaceTexture {
   private isBlinking: boolean = false
   private chewState: number = 0
   private yawnTimer: number = 0
+  private wakeTimer: number = 0
 
   constructor(size: number = 512) {
     this.canvas = document.createElement('canvas')
@@ -40,6 +41,12 @@ export class DynamicFaceTexture {
 
     if (mood === 'eating') {
       this.chewState += delta * 12
+    }
+
+    if (mood === 'waking_up') {
+      this.wakeTimer += delta
+    } else {
+      this.wakeTimer = 0
     }
 
     // Yawn cycle for sleepy mood
@@ -80,7 +87,7 @@ export class DynamicFaceTexture {
     const cheekRadius = width * 0.07 + chewPuff
 
     ctx.save()
-    const blushAlpha = mood === 'super_happy' || mood === 'full' ? 0.88 : mood === 'happy' ? 0.7 : 0.45
+    const blushAlpha = mood === 'super_happy' || mood === 'full' || mood === 'waking_up' ? 0.88 : mood === 'happy' ? 0.7 : 0.45
     ctx.globalAlpha = blushAlpha
     ctx.fillStyle = blushColor
 
@@ -244,6 +251,56 @@ export class DynamicFaceTexture {
       ctx.beginPath()
       ctx.arc(rightEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
+    } else if (mood === 'waking_up') {
+      if (this.wakeTimer < 0.65) {
+        // Sleepy morning eye blink & stretch: > <
+        ctx.strokeStyle = '#2B2129'
+        ctx.lineWidth = 10
+        ctx.lineCap = 'round'
+
+        // Left '>'
+        ctx.beginPath()
+        ctx.moveTo(leftEyeX - 22, eyeY - 14)
+        ctx.lineTo(leftEyeX + 12, eyeY)
+        ctx.lineTo(leftEyeX - 22, eyeY + 14)
+        ctx.stroke()
+
+        // Right '<'
+        ctx.beginPath()
+        ctx.moveTo(rightEyeX + 22, eyeY - 14)
+        ctx.lineTo(rightEyeX - 12, eyeY)
+        ctx.lineTo(rightEyeX + 22, eyeY + 14)
+        ctx.stroke()
+
+        // Morning golden twinkle
+        ctx.fillStyle = '#FFD166'
+        ctx.beginPath()
+        ctx.arc(leftEyeX - 26, eyeY - 10, 4, 0, Math.PI * 2)
+        ctx.fill()
+      } else {
+        // Big round bright sparkling morning awake eyes!
+        ;[leftEyeX, rightEyeX].forEach((ex) => {
+          ctx.fillStyle = '#231B26'
+          ctx.beginPath()
+          ctx.ellipse(ex, eyeY, eyeRadius * 1.08, eyeRadius * 1.12, 0, 0, Math.PI * 2)
+          ctx.fill()
+
+          // Big shining morning highlights
+          ctx.fillStyle = '#FFFFFF'
+          ctx.beginPath()
+          ctx.arc(ex - 4, eyeY - 5, eyeRadius * 0.46, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.beginPath()
+          ctx.arc(ex + 8, eyeY + 7, eyeRadius * 0.22, 0, Math.PI * 2)
+          ctx.fill()
+
+          // Starry golden twinkle
+          ctx.fillStyle = '#FFD166'
+          ctx.beginPath()
+          ctx.arc(ex - 2, eyeY + 8, eyeRadius * 0.16, 0, Math.PI * 2)
+          ctx.fill()
+        })
+      }
     } else if (mood === 'anticipating') {
       // Big excited open sparkling eyes focused on incoming treat!
       ;[leftEyeX, rightEyeX].forEach((ex) => {
@@ -545,6 +602,35 @@ export class DynamicFaceTexture {
       ctx.beginPath()
       ctx.arc(mouthX + curveR - 1, mouthY - 3, curveR, 0.15, Math.PI * 0.8)
       ctx.stroke()
+    } else if (mood === 'waking_up') {
+      if (this.wakeTimer < 0.65) {
+        // Sweet morning stretch yawn :o
+        ctx.fillStyle = '#2B1D28'
+        ctx.beginPath()
+        ctx.ellipse(mouthX, mouthY + 5, 12, 14, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.stroke()
+
+        // Little pink tongue
+        ctx.fillStyle = '#FF8FA3'
+        ctx.beginPath()
+        ctx.ellipse(mouthX, mouthY + 12, 8, 6, 0, 0, Math.PI)
+        ctx.fill()
+      } else {
+        // Big joyful open morning smile ^ヮ^
+        ctx.fillStyle = '#FF5277'
+        ctx.beginPath()
+        ctx.arc(mouthX, mouthY - 3, 20, 0.1, Math.PI - 0.1)
+        ctx.closePath()
+        ctx.fill()
+        ctx.stroke()
+
+        // Little tongue
+        ctx.fillStyle = '#FFAEC0'
+        ctx.beginPath()
+        ctx.arc(mouthX, mouthY + 8, 10, 0, Math.PI)
+        ctx.fill()
+      }
     } else if (mood === 'super_happy') {
       // Big open happy mouth with tongue
       ctx.fillStyle = '#FF5277'
