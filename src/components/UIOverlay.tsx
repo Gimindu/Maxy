@@ -33,6 +33,7 @@ interface UIOverlayProps {
   onSleep: () => void
   onResetStats: () => void
   onUpdateStat?: (statKey: 'happiness' | 'hunger' | 'energy' | 'cleanliness', value: number) => void
+  autoSleepSecondsLeft?: number | null
 }
 
 export function UIOverlay({
@@ -53,6 +54,7 @@ export function UIOverlay({
   onSleep,
   onResetStats,
   onUpdateStat,
+  autoSleepSecondsLeft,
 }: UIOverlayProps) {
   // Format percentage nicely
   const clamp = (val: number) => Math.max(0, Math.min(100, Math.round(val)))
@@ -221,6 +223,11 @@ export function UIOverlay({
           <div className="stat-label">
             <Zap size={15} className="stat-icon energy-color" />
             <span>Energy</span>
+            {autoSleepSecondsLeft !== null && autoSleepSecondsLeft !== undefined && (
+              <span className="sleep-countdown-pill" title="Maxy is out of energy! Auto-sleeping soon...">
+                💤 {autoSleepSecondsLeft}s
+              </span>
+            )}
           </div>
           <div
             className="stat-bar-track interactive-stat-track"

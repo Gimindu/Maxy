@@ -18,6 +18,7 @@ interface PetMeshProps {
   cleanliness?: number
   hitCount?: number
   onWakeUp?: () => void
+  energy?: number
 }
 
 export function PetMesh({
@@ -30,6 +31,7 @@ export function PetMesh({
   cleanliness = 100,
   hitCount = 0,
   onWakeUp,
+  energy = 100,
 }: PetMeshProps) {
   const groupRef = useRef<THREE.Group>(null)
   const [isHovered, setIsHovered] = useState(false)
@@ -167,8 +169,9 @@ export function PetMesh({
     groupRef.current.scale.copy(scaleRef.current)
 
     // Floating position
-    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full' || mood === 'waking_up') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
-    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full' || mood === 'waking_up') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
+    const isExhausted = (energy ?? 100) <= 15
+    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full' || mood === 'waking_up') ? 0 : mood === 'sleepy' ? (isExhausted ? 0.75 : 1.2) : 2.0
+    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full' || mood === 'waking_up') ? 0 : mood === 'sleepy' ? (isExhausted ? 0.045 : 0.09) : 0.15
     let targetY = Math.sin(t * floatSpeed) * floatHeight
     if (mood === 'anticipating') {
       targetY = 0 // Centered mouth height for incoming treat
@@ -241,14 +244,17 @@ export function PetMesh({
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.0, 0.15)
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0.0, 0.15)
     } else if (mood === 'sleepy') {
-      // Drowsy sluggish follow with gentle tired head-drop nod
-      const sleepNod = Math.sin(t * 1.4) * 0.06 + 0.05
-      const targetRotY = pointer.x * 0.3
-      const targetRotX = -pointer.y * 0.2 + sleepNod
-      const targetRotZ = Math.sin(t * 0.7) * 0.04
+      // Drowsy sluggish follow with heavy tired head-drop nod
+      const nodSpeed = isExhausted ? 0.95 : 1.4
+      const nodAmp = isExhausted ? 0.18 : 0.06
+      const nodBase = isExhausted ? 0.15 : 0.05
+      const sleepNod = Math.sin(t * nodSpeed) * nodAmp + nodBase
+      const targetRotY = pointer.x * (isExhausted ? 0.09 : 0.3)
+      const targetRotX = -pointer.y * (isExhausted ? 0.06 : 0.2) + sleepNod
+      const targetRotZ = Math.sin(t * 0.6) * (isExhausted ? 0.08 : 0.04)
 
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.05)
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.05)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, isExhausted ? 0.03 : 0.05)
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, isExhausted ? 0.035 : 0.05)
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetRotZ, 0.05)
     } else {
       // Dynamic follow

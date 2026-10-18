@@ -44,6 +44,7 @@ export default function App() {
   const [isCustomizerOpen, setIsCustomizerOpen] = useState(false)
   const [statusMessage, setStatusMessage] = useState('Maxy is happy to see you! 💕')
   const [particles, setParticles] = useState<FloatingParticleData[]>([])
+  const [autoSleepSecondsLeft, setAutoSleepSecondsLeft] = useState<number | null>(null)
 
   const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nextParticleId = useRef(1)
@@ -229,9 +230,9 @@ export default function App() {
     }
   }, [isSleeping, stats.cleanliness, stats.energy, stats.hunger, stats.happiness, mood])
 
-  // Low energy yawning audio & floating Zzz effects
+  // Low energy yawning audio & floating Zzz effects for moderate sleepiness (16-29 energy)
   useEffect(() => {
-    if (isSleeping || stats.energy >= 30) return
+    if (isSleeping || stats.energy >= 30 || stats.energy <= 15) return
 
     // Immediately trigger initial yawn
     sound.playYawn()
@@ -245,7 +246,49 @@ export default function App() {
     }, 8500)
 
     return () => clearInterval(yawnInterval)
-  }, [isSleeping, stats.energy < 30, petName, showMessage, spawnParticles])
+  }, [isSleeping, stats.energy >= 30, stats.energy <= 15, petName, showMessage, spawnParticles])
+
+  // Auto-sleep timer when energy is fully low (<= 15)
+  const isFullyExhausted = !isSleeping && stats.energy <= 15
+
+  useEffect(() => {
+    if (!isFullyExhausted) {
+      setAutoSleepSecondsLeft(null)
+      return
+    }
+
+    // Start 30-second countdown
+    setAutoSleepSecondsLeft(30)
+    sound.playYawn()
+    showMessage(`*Yaaawn...* ${petName} is completely out of energy! Auto-sleeping in 30s... 💤`, 4500)
+    spawnParticles('zzz', 2, [0.35, 0.7, 0.2])
+
+    const interval = setInterval(() => {
+      setAutoSleepSecondsLeft((prev) => {
+        if (prev === null) return 30
+        if (prev <= 1) return 0
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [isFullyExhausted, petName, showMessage, spawnParticles])
+
+  // Trigger auto-sleep when countdown hits 0, with a warning at 10s
+  useEffect(() => {
+    if (autoSleepSecondsLeft === 0 && !isSleeping) {
+      setIsSleeping(true)
+      sound.playSleep()
+      setMood('sleeping')
+      showMessage(`*Doze...* ${petName} couldn't stay awake any longer and drifted off to sleep! 💤😴`, 5000)
+      spawnParticles('zzz', 5, [0, 0.6, 0.2])
+      setAutoSleepSecondsLeft(null)
+    } else if (autoSleepSecondsLeft === 10) {
+      sound.playYawn()
+      showMessage(`*Heavy eyelids...* ${petName} is nodding off (10s until sleep)! 🥱`, 3000)
+      spawnParticles('zzz', 2, [0.35, 0.7, 0.2])
+    }
+  }, [autoSleepSecondsLeft, isSleeping, petName, showMessage, spawnParticles])
 
   // Interactions
   const handlePoke = useCallback(() => {
@@ -532,6 +575,7 @@ export default function App() {
         onToyBounced={handleToyBounced}
         onWakeUp={handleWakeUp}
         cleanliness={stats.cleanliness}
+        energy={stats.energy}
       />
 
       {/* Responsive Glass UI Overlay */}
@@ -553,6 +597,7 @@ export default function App() {
         onSleep={handleSleep}
         onResetStats={handleResetStats}
         onUpdateStat={handleUpdateStat}
+        autoSleepSecondsLeft={autoSleepSecondsLeft}
       />
 
       {/* Wardrobe & Customization Modal */}
