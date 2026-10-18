@@ -76,27 +76,45 @@ class SoundManager {
     if (!this.ctx) return
 
     const now = this.ctx.currentTime
-    // Rhythmic munching sequence: crunch, chew, chew, swallow!
-    ;[0, 0.16, 0.32, 0.50].forEach((offset, idx) => {
+    // Extended rhythmic munching sequence: crunch, chew, chew, munch, gulp!
+    const munchOffsets = [0, 0.28, 0.58, 0.90, 1.25, 1.62]
+    munchOffsets.forEach((offset, idx) => {
       if (!this.ctx) return
       const osc = this.ctx.createOscillator()
       const gain = this.ctx.createGain()
 
       osc.type = idx % 2 === 0 ? 'triangle' : 'sine'
-      const baseFreq = 320 + idx * 45
+      const baseFreq = 300 + (idx % 3) * 60
       osc.frequency.setValueAtTime(baseFreq, now + offset)
-      osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.6, now + offset + 0.05)
-      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.7, now + offset + 0.12)
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.7, now + offset + 0.06)
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.65, now + offset + 0.14)
 
-      gain.gain.setValueAtTime(0.22, now + offset)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.13)
+      gain.gain.setValueAtTime(0.24, now + offset)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.15)
 
       osc.connect(gain)
       gain.connect(this.ctx.destination)
 
       osc.start(now + offset)
-      osc.stop(now + offset + 0.13)
+      osc.stop(now + offset + 0.15)
     })
+
+    // Satisfied swallow gulp at 1.95s
+    setTimeout(() => {
+      if (!this.ctx || this.isMuted) return
+      const gulpNow = this.ctx.currentTime
+      const osc = this.ctx.createOscillator()
+      const gain = this.ctx.createGain()
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(440, gulpNow)
+      osc.frequency.exponentialRampToValueAtTime(620, gulpNow + 0.1)
+      gain.gain.setValueAtTime(0.18, gulpNow)
+      gain.gain.exponentialRampToValueAtTime(0.01, gulpNow + 0.18)
+      osc.connect(gain)
+      gain.connect(this.ctx.destination)
+      osc.start(gulpNow)
+      osc.stop(gulpNow + 0.18)
+    }, 1950)
   }
 
   public playSleep() {

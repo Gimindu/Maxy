@@ -144,9 +144,10 @@ In [`faceCanvas.ts`](file:///c:/Users/GIMINDU/Videos/Projects/maxy/src/utils/fac
 - **Mood Morphs:**
   - `happy`: Wide open eyes with double specular sparkles and curved `:3` mouth.
   - `poked`: Squished `>.<` eyes with tiny `:o` mouth.
+  - `anticipating`: Big excited sparkling eyes locked onto the incoming strawberry (`gazeX = 0.45, gazeY = -0.55`), with mouth wide open showing inner pink tongue.
+  - `eating`: Rhythmic chewing animation alternating between an open chomping mouth with visible strawberry morsels, pink tongue, biting down onto closed wavy cat-lips `:3`, cheek puffs, squinting bouncing eyes `^ ^`, and hopping crumbs.
   - `sleepy`: Heavy droopy eyelids, animated yawning mouth stretching wide with tiredness teardrops, and synthesized vocalized yawning sound when energy < 30%.
   - `sleeping`: Relaxed `u_u` crescent eyes and calm resting breath.
-  - `eating`: Animated reciprocating chew mouth cycle.
   - `dirty`: Smudge dirt spots appear over the face.
 
 ### 3. Modular 3D Accessories
@@ -176,7 +177,7 @@ In [`Particles3D.tsx`](file:///c:/Users/GIMINDU/Videos/Projects/maxy/src/compone
 ### 6. Web Audio API Sound Synthesizer
 In [`audio.ts`](file:///c:/Users/GIMINDU/Videos/Projects/maxy/src/utils/audio.ts):
 - **Poke:** Exponential sine frequency sweep ($260\text{ Hz} \to 520\text{ Hz} \to 330\text{ Hz}$).
-- **Feed:** Dual munching attack envelopes with rapid frequency blips.
+- **Feed:** 6-step extended rhythmic crunching/munching sequence ($300\text{ Hz} - 480\text{ Hz}$) with alternating triangle and sine harmonics, followed by an adorable swallow gulp at $1.95\text{s}$.
 - **Pet:** Soft chime chord on $D_5$ ($587\text{ Hz}$) and $A_5$ ($880\text{ Hz}$).
 - **Sleep:** Four-note descending bedtime lullaby.
 - **Wash:** High-frequency bubble popping transients.

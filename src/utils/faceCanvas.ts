@@ -116,16 +116,17 @@ export class DynamicFaceTexture {
       ctx.stroke()
     } else if (mood === 'eating') {
       // Joyful closed smiling eyes while munching: ^ ^
+      const chewSquint = Math.sin(this.chewState) * 2.5
       ctx.strokeStyle = '#2B2129'
       ctx.lineWidth = 10
       ctx.lineCap = 'round'
 
       ctx.beginPath()
-      ctx.arc(leftEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.2, -0.2)
+      ctx.arc(leftEyeX, eyeY + 4 + chewSquint, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
 
       ctx.beginPath()
-      ctx.arc(rightEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.2, -0.2)
+      ctx.arc(rightEyeX, eyeY + 4 + chewSquint, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
     } else if (mood === 'anticipating') {
       // Big excited open sparkling eyes focused on incoming treat!
@@ -340,31 +341,60 @@ export class DynamicFaceTexture {
       ctx.fill()
     } else if (mood === 'eating') {
       // Dynamic rhythmic chewing & munching mouth!
-      // Opens wide and bites down shut repeatedly: "om nom nom"
-      const chewCycle = Math.sin(this.chewState) * 0.5 + 0.5 // 0 to 1
-      const chewWidth = 15 + (1 - chewCycle) * 6
-      const chewHeight = 5 + chewCycle * 18
+      // Alternates between opening wide with food inside and biting shut: "om nom nom"
+      const chewCycle = Math.sin(this.chewState) * 0.5 + 0.5 // 0 (bite shut) to 1 (mouth open)
+      const mouthOpen = chewCycle > 0.22
 
-      // Dark mouth cavern
-      ctx.fillStyle = '#2B1D28'
-      ctx.beginPath()
-      ctx.ellipse(mouthX, mouthY + 5, chewWidth, chewHeight, 0, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
+      if (mouthOpen) {
+        // Open munch cavern
+        const openProgress = (chewCycle - 0.22) / 0.78
+        const chewWidth = 14 + openProgress * 9
+        const chewHeight = 6 + openProgress * 19
 
-      // Cute animated tongue that moves with the munch
-      ctx.fillStyle = '#FF758F'
-      const tongueWiggle = Math.cos(this.chewState) * 3
-      ctx.beginPath()
-      ctx.ellipse(mouthX + tongueWiggle, mouthY + 5 + chewHeight * 0.45, chewWidth * 0.65, chewHeight * 0.4, 0, 0, Math.PI)
-      ctx.fill()
+        // Dark inner mouth cavern
+        ctx.fillStyle = '#2B1D28'
+        ctx.beginPath()
+        ctx.ellipse(mouthX, mouthY + 5, chewWidth, chewHeight, 0, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.stroke()
 
-      // Food strawberry crumbs around mouth while munching!
-      ctx.fillStyle = '#FF3366'
+        // Strawberry morsels inside mouth being chewed
+        ctx.fillStyle = '#FF2A55'
+        ctx.beginPath()
+        ctx.arc(mouthX - 4, mouthY + 3, 3.5, 0, Math.PI * 2)
+        ctx.arc(mouthX + 5, mouthY + 6, 3, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Cute animated pink tongue
+        ctx.fillStyle = '#FF758F'
+        const tongueWiggle = Math.cos(this.chewState * 2) * 3
+        ctx.beginPath()
+        ctx.ellipse(mouthX + tongueWiggle, mouthY + 5 + chewHeight * 0.45, chewWidth * 0.7, chewHeight * 0.42, 0, 0, Math.PI)
+        ctx.fill()
+      } else {
+        // Bite-down chomp! Closed wavy munching cat-lips :3
+        ctx.strokeStyle = '#2B2129'
+        ctx.lineWidth = 9
+        ctx.lineCap = 'round'
+
+        const curveR = 12
+        ctx.beginPath()
+        ctx.arc(mouthX - curveR + 1, mouthY + 5, curveR, 0.2, Math.PI * 0.85)
+        ctx.stroke()
+
+        ctx.beginPath()
+        ctx.arc(mouthX + curveR - 1, mouthY + 5, curveR, 0.15, Math.PI * 0.8)
+        ctx.stroke()
+      }
+
+      // Food strawberry crumbs jumping around mouth while munching!
+      const crumbHop = Math.sin(this.chewState * 2) * 3
+      ctx.fillStyle = '#FF2A55'
       ctx.beginPath()
-      ctx.arc(mouthX - chewWidth - 4, mouthY + 3, 2.5, 0, Math.PI * 2)
-      ctx.arc(mouthX + chewWidth + 5, mouthY + 8, 2, 0, Math.PI * 2)
-      ctx.arc(mouthX + chewWidth + 2, mouthY - 4, 1.8, 0, Math.PI * 2)
+      ctx.arc(mouthX - 22, mouthY + 2 + crumbHop, 3, 0, Math.PI * 2)
+      ctx.arc(mouthX + 24, mouthY + 6 - crumbHop, 2.5, 0, Math.PI * 2)
+      ctx.arc(mouthX + 18, mouthY - 7 + crumbHop, 2.2, 0, Math.PI * 2)
+      ctx.arc(mouthX - 16, mouthY + 12 - crumbHop, 2, 0, Math.PI * 2)
       ctx.fill()
     } else if (mood === 'super_happy') {
       // Big open happy mouth with tongue

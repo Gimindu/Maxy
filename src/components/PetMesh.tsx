@@ -106,18 +106,36 @@ export function PetMesh({
     groupRef.current.scale.copy(scaleRef.current)
 
     // Floating position
-    const floatSpeed = isSleeping ? 1.0 : mood === 'sleepy' ? 1.2 : 2.0
-    const floatHeight = isSleeping ? 0.08 : mood === 'sleepy' ? 0.09 : 0.15
-    const targetY = Math.sin(t * floatSpeed) * floatHeight
-    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.1)
+    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
+    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
+    let targetY = Math.sin(t * floatSpeed) * floatHeight
+    if (mood === 'anticipating') {
+      targetY = 0 // Centered mouth height for incoming treat
+    } else if (mood === 'eating') {
+      // Cheerful rhythmic munch bounce!
+      targetY = Math.sin(t * 14) * 0.038
+    }
+    groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.12)
 
-    // Rotation / Cursor tracking
+    // Rotation / Head orientation
     if (isSleeping) {
       // Gentle restful tilt
       const sleepTiltZ = Math.sin(t * 0.8) * 0.08 + 0.06
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, sleepTiltZ, 0.05)
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.1, 0.05)
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.08, 0.05)
+    } else if (mood === 'anticipating') {
+      // Pet faces front and center, tilting slightly forward eagerly to catch the incoming treat
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.05, 0.15)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.0, 0.15)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0.0, 0.15)
+    } else if (mood === 'eating') {
+      // Joyful chewing head bobbing & jiggle
+      const chewBob = Math.sin(t * 14) * 0.038
+      const chewWiggle = Math.sin(t * 7) * 0.025
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.04 + chewBob, 0.15)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, chewWiggle, 0.15)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -chewWiggle * 0.5, 0.15)
     } else if (mood === 'sleepy') {
       // Drowsy sluggish follow with gentle tired head-drop nod
       const sleepNod = Math.sin(t * 1.4) * 0.06 + 0.05
@@ -139,18 +157,14 @@ export function PetMesh({
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetRotZ, 0.08)
     }
 
-    // Chewing bounce & anticipation lean
-    if (mood === 'eating') {
-      groupRef.current.position.y += Math.sin(t * 16) * 0.025
-      groupRef.current.rotation.z += Math.sin(t * 8) * 0.02
-    } else if (mood === 'anticipating') {
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.22, 0.1)
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.32, 0.1)
+    // Update dynamic face & gaze tracking
+    let gazeX = isSleeping ? 0 : pointer.x
+    let gazeY = isSleeping ? 0 : pointer.y
+    if (mood === 'anticipating') {
+      // Eyes eagerly locked on incoming strawberry from bottom-right!
+      gazeX = 0.45
+      gazeY = -0.55
     }
-
-    // Update dynamic face
-    const gazeX = isSleeping ? 0 : pointer.x
-    const gazeY = isSleeping ? 0 : pointer.y
     faceGenerator.update(mood, gazeX, gazeY, delta, color.blushHex)
   })
 

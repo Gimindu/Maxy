@@ -69,27 +69,38 @@ export default function App() {
   const spawnParticles = useCallback(
     (type: FloatingParticleData['type'], count = 3, center: [number, number, number] = [0, 0.4, 0]) => {
       const newParticles: FloatingParticleData[] = []
+      const isCrumb = type === 'crumb'
+      const spreadX = isCrumb ? 0.25 : 1.2
+      const spreadY = isCrumb ? 0.2 : 0.8
+      const spreadZ = isCrumb ? 0.2 : 0.8
+
       for (let i = 0; i < count; i++) {
         newParticles.push({
           id: nextParticleId.current++,
           type,
           position: [
-            center[0] + (Math.random() - 0.5) * 1.2,
-            center[1] + (Math.random() - 0.5) * 0.8,
-            center[2] + (Math.random() - 0.5) * 0.8,
+            center[0] + (Math.random() - 0.5) * spreadX,
+            center[1] + (Math.random() - 0.5) * spreadY,
+            center[2] + (Math.random() - 0.5) * spreadZ,
           ],
-          velocity: [
-            (Math.random() - 0.5) * 0.015,
-            0.02 + Math.random() * 0.02,
-            (Math.random() - 0.5) * 0.015,
-          ],
-          scale: 0.6 + Math.random() * 0.5,
+          velocity: isCrumb
+            ? [
+                (Math.random() - 0.5) * 0.025,
+                0.01 + Math.random() * 0.025,
+                0.015 + Math.random() * 0.02,
+              ]
+            : [
+                (Math.random() - 0.5) * 0.015,
+                0.02 + Math.random() * 0.02,
+                (Math.random() - 0.5) * 0.015,
+              ],
+          scale: (isCrumb ? 0.45 : 0.6) + Math.random() * 0.5,
           opacity: 1,
           life: 0,
-          maxLife: 60 + Math.random() * 40,
+          maxLife: (isCrumb ? 50 : 60) + Math.random() * 40,
         })
       }
-      setParticles((prev) => [...prev.slice(-25), ...newParticles])
+      setParticles((prev) => [...prev.slice(-30), ...newParticles])
     },
     []
   )
@@ -195,6 +206,10 @@ export default function App() {
       setMood('sleeping')
       return
     }
+    // Protect active transient moods from being erased by stat changes
+    if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy') {
+      return
+    }
     if (stats.cleanliness < 25) {
       setMood('dirty')
       return
@@ -212,7 +227,7 @@ export default function App() {
     } else {
       setMood('idle')
     }
-  }, [isSleeping, stats.cleanliness, stats.energy, stats.hunger, stats.happiness])
+  }, [isSleeping, stats.cleanliness, stats.energy, stats.hunger, stats.happiness, mood])
 
   // Low energy yawning audio & floating Zzz effects
   useEffect(() => {
@@ -303,24 +318,24 @@ export default function App() {
     setIsTreatActive(false)
     sound.playFeed()
     setMood('eating')
-    spawnParticles('crumb', 7, [0, -0.1, 1.05])
-    spawnParticles('heart', 2, [0, 0.6, 0.5])
+    spawnParticles('crumb', 12, [0, -0.10, 1.05])
+    spawnParticles('heart', 2, [0, 0.5, 0.3])
     setStats((prev) => ({
       ...prev,
       hunger: Math.min(100, prev.hunger + 30),
       happiness: Math.min(100, prev.happiness + 10),
     }))
     addXP(5)
-    showMessage(`*Nom nom nom!* ${petName} is munching the strawberry! 🍓`)
+    showMessage(`*Nom nom nom!* ${petName} is munching the strawberry! 🍓`, 3500)
     setTimeout(() => {
       setMood('super_happy')
-      showMessage(`Yum! ${petName} finished the treat! ✨`)
+      showMessage(`Yum! ${petName} finished the treat! ✨`, 2500)
       setTimeout(() => {
         if (!isSleeping) {
           setMood(stats.energy < 30 ? 'sleepy' : 'happy')
         }
-      }, 1200)
-    }, 1600)
+      }, 1400)
+    }, 2400)
   }, [isSleeping, stats.energy, addXP, showMessage, spawnParticles, petName])
 
   const handlePlay = useCallback(() => {
