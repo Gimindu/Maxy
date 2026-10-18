@@ -168,10 +168,10 @@ export default function App() {
           const newHunger = Math.max(0, prev.hunger - 0.2)
           return { ...prev, energy: newEnergy, hunger: newHunger }
         } else {
-          // Natural depletion
-          const newHunger = Math.max(0, prev.hunger - 0.6)
-          const newEnergy = Math.max(0, prev.energy - 0.4)
-          const newClean = Math.max(0, prev.cleanliness - 0.3)
+          // Natural depletion (gentle and relaxed energy consumption)
+          const newHunger = Math.max(0, prev.hunger - 0.4)
+          const newEnergy = Math.max(0, prev.energy - 0.08)
+          const newClean = Math.max(0, prev.cleanliness - 0.2)
           let newHappy = prev.happiness
 
           if (newHunger < 20 || newClean < 20) {
@@ -379,6 +379,7 @@ export default function App() {
     setStats((prev) => ({
       ...prev,
       hunger: Math.min(100, prev.hunger + 30),
+      energy: Math.min(100, prev.energy + 8),
       happiness: Math.min(100, prev.happiness + 10),
     }))
     addXP(5)
@@ -414,7 +415,7 @@ export default function App() {
     setStats((prev) => ({
       ...prev,
       happiness: Math.min(100, prev.happiness + 5),
-      energy: Math.max(0, prev.energy - 3),
+      energy: Math.max(0, prev.energy - 0.4),
     }))
     addXP(3)
   }, [addXP, spawnParticles])
