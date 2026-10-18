@@ -295,14 +295,15 @@ export default function App() {
       return
     }
     setIsTreatActive(true)
-    showMessage(`Tossing a delicious strawberry to ${petName}...`)
+    setMood('anticipating')
+    showMessage(`Tossing a strawberry! ${petName} opens wide! 🍓`)
   }, [isSleeping, stats.hunger, petName, showMessage])
 
   const handleTreatEaten = useCallback(() => {
     setIsTreatActive(false)
     sound.playFeed()
     setMood('eating')
-    spawnParticles('crumb', 5, [0, 0, 1.0])
+    spawnParticles('crumb', 7, [0, -0.1, 1.05])
     spawnParticles('heart', 2, [0, 0.6, 0.5])
     setStats((prev) => ({
       ...prev,
@@ -310,15 +311,16 @@ export default function App() {
       happiness: Math.min(100, prev.happiness + 10),
     }))
     addXP(5)
-    showMessage(`Yum! ${petName} loved the fresh strawberry! 🍓`)
+    showMessage(`*Nom nom nom!* ${petName} is munching the strawberry! 🍓`)
     setTimeout(() => {
       setMood('super_happy')
+      showMessage(`Yum! ${petName} finished the treat! ✨`)
       setTimeout(() => {
         if (!isSleeping) {
           setMood(stats.energy < 30 ? 'sleepy' : 'happy')
         }
       }, 1200)
-    }, 1000)
+    }, 1600)
   }, [isSleeping, stats.energy, addXP, showMessage, spawnParticles, petName])
 
   const handlePlay = useCallback(() => {

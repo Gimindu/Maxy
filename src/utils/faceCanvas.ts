@@ -70,7 +70,9 @@ export class DynamicFaceTexture {
     const cheekY = height * 0.55
     const leftCheekX = width * 0.24
     const rightCheekX = width * 0.76
-    const cheekRadius = width * 0.07
+    // Cheeks puff out rhythmically while munching
+    const chewPuff = mood === 'eating' ? Math.sin(this.chewState) * 3.5 : 0
+    const cheekRadius = width * 0.07 + chewPuff
 
     ctx.save()
     const blushAlpha = mood === 'super_happy' ? 0.85 : mood === 'happy' ? 0.7 : 0.45
@@ -112,6 +114,41 @@ export class DynamicFaceTexture {
       ctx.beginPath()
       ctx.arc(rightEyeX, eyeY - 5, eyeRadius * 0.8, 0.2, Math.PI - 0.2)
       ctx.stroke()
+    } else if (mood === 'eating') {
+      // Joyful closed smiling eyes while munching: ^ ^
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 10
+      ctx.lineCap = 'round'
+
+      ctx.beginPath()
+      ctx.arc(leftEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.2, -0.2)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.arc(rightEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.2, -0.2)
+      ctx.stroke()
+    } else if (mood === 'anticipating') {
+      // Big excited open sparkling eyes focused on incoming treat!
+      ;[leftEyeX, rightEyeX].forEach((ex) => {
+        ctx.fillStyle = '#231B26'
+        ctx.beginPath()
+        ctx.ellipse(ex + 4, eyeY + 4, eyeRadius * 1.1, eyeRadius * 1.15, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Excited large sparkles
+        ctx.fillStyle = '#FFFFFF'
+        ctx.beginPath()
+        ctx.arc(ex + 1, eyeY, eyeRadius * 0.45, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(ex + 9, eyeY + 8, eyeRadius * 0.2, 0, Math.PI * 2)
+        ctx.fill()
+
+        ctx.fillStyle = '#FFD166'
+        ctx.beginPath()
+        ctx.arc(ex - 3, eyeY + 8, eyeRadius * 0.16, 0, Math.PI * 2)
+        ctx.fill()
+      })
     } else if (mood === 'poked') {
       // Squished eyes: >.<
       ctx.strokeStyle = '#2B2129'
@@ -284,16 +321,51 @@ export class DynamicFaceTexture {
         ctx.arc(mouthX, mouthY + 2, 7, 0, Math.PI)
         ctx.stroke()
       }
-    } else if (mood === 'eating') {
-      // Chewing mouth (opens and closes)
-      const chewOpen = Math.sin(this.chewState) * 0.5 + 0.5
-      const mHeight = 8 + chewOpen * 16
+    } else if (mood === 'anticipating') {
+      // Mouth OPEN WIDE in anticipation! "Aaaah! :O"
+      const mWidth = 19
+      const mHeight = 24
 
-      ctx.fillStyle = '#FF6B8B'
+      // Dark inner mouth cavern
+      ctx.fillStyle = '#2B1D28'
       ctx.beginPath()
-      ctx.ellipse(mouthX, mouthY, 16, mHeight, 0, 0, Math.PI * 2)
+      ctx.ellipse(mouthX, mouthY + 8, mWidth, mHeight, 0, 0, Math.PI * 2)
       ctx.fill()
       ctx.stroke()
+
+      // Pink tongue at bottom
+      ctx.fillStyle = '#FF758F'
+      ctx.beginPath()
+      ctx.ellipse(mouthX, mouthY + 18, mWidth * 0.7, 9, 0, 0, Math.PI)
+      ctx.fill()
+    } else if (mood === 'eating') {
+      // Dynamic rhythmic chewing & munching mouth!
+      // Opens wide and bites down shut repeatedly: "om nom nom"
+      const chewCycle = Math.sin(this.chewState) * 0.5 + 0.5 // 0 to 1
+      const chewWidth = 15 + (1 - chewCycle) * 6
+      const chewHeight = 5 + chewCycle * 18
+
+      // Dark mouth cavern
+      ctx.fillStyle = '#2B1D28'
+      ctx.beginPath()
+      ctx.ellipse(mouthX, mouthY + 5, chewWidth, chewHeight, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+
+      // Cute animated tongue that moves with the munch
+      ctx.fillStyle = '#FF758F'
+      const tongueWiggle = Math.cos(this.chewState) * 3
+      ctx.beginPath()
+      ctx.ellipse(mouthX + tongueWiggle, mouthY + 5 + chewHeight * 0.45, chewWidth * 0.65, chewHeight * 0.4, 0, 0, Math.PI)
+      ctx.fill()
+
+      // Food strawberry crumbs around mouth while munching!
+      ctx.fillStyle = '#FF3366'
+      ctx.beginPath()
+      ctx.arc(mouthX - chewWidth - 4, mouthY + 3, 2.5, 0, Math.PI * 2)
+      ctx.arc(mouthX + chewWidth + 5, mouthY + 8, 2, 0, Math.PI * 2)
+      ctx.arc(mouthX + chewWidth + 2, mouthY - 4, 1.8, 0, Math.PI * 2)
+      ctx.fill()
     } else if (mood === 'super_happy') {
       // Big open happy mouth with tongue
       ctx.fillStyle = '#FF5277'

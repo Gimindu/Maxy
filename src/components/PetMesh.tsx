@@ -139,6 +139,15 @@ export function PetMesh({
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetRotZ, 0.08)
     }
 
+    // Chewing bounce & anticipation lean
+    if (mood === 'eating') {
+      groupRef.current.position.y += Math.sin(t * 16) * 0.025
+      groupRef.current.rotation.z += Math.sin(t * 8) * 0.02
+    } else if (mood === 'anticipating') {
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.22, 0.1)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.32, 0.1)
+    }
+
     // Update dynamic face
     const gazeX = isSleeping ? 0 : pointer.x
     const gazeY = isSleeping ? 0 : pointer.y

@@ -76,24 +76,26 @@ class SoundManager {
     if (!this.ctx) return
 
     const now = this.ctx.currentTime
-    // Double bite/munch sound
-    ;[0, 0.12].forEach((offset, idx) => {
+    // Rhythmic munching sequence: crunch, chew, chew, swallow!
+    ;[0, 0.16, 0.32, 0.50].forEach((offset, idx) => {
       if (!this.ctx) return
       const osc = this.ctx.createOscillator()
       const gain = this.ctx.createGain()
 
-      osc.type = idx === 0 ? 'sine' : 'triangle'
-      osc.frequency.setValueAtTime(idx === 0 ? 350 : 440, now + offset)
-      osc.frequency.exponentialRampToValueAtTime(idx === 0 ? 480 : 660, now + offset + 0.08)
+      osc.type = idx % 2 === 0 ? 'triangle' : 'sine'
+      const baseFreq = 320 + idx * 45
+      osc.frequency.setValueAtTime(baseFreq, now + offset)
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.6, now + offset + 0.05)
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.7, now + offset + 0.12)
 
-      gain.gain.setValueAtTime(0.2, now + offset)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.1)
+      gain.gain.setValueAtTime(0.22, now + offset)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.13)
 
       osc.connect(gain)
       gain.connect(this.ctx.destination)
 
       osc.start(now + offset)
-      osc.stop(now + offset + 0.1)
+      osc.stop(now + offset + 0.13)
     })
   }
 

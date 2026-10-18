@@ -29,7 +29,7 @@ An ultra-cute, fully interactive 3D virtual pet built with **React Three Fiber (
 - **Squishy Mochi Body:** Built using Drei's [`<RoundedBox>`](file:///c:/Users/GIMINDU/Videos/Projects/maxy/src/components/PetMesh.tsx) with custom spring physics that dynamically compress and stretch while conserving volume upon clicking or poking.
 - **Dynamic Procedural Face:** Rendered on an internal high-res HTML5 canvas texture featuring autonomous blinking, pupil gaze tracking following the cursor or finger touch, soft pulsing blush cheeks, and reactive mouth morphs.
 - **Interactive Mini-Games & Actions:**
-  - 🍓 **Feed:** Launches a 3D strawberry in a parabolic arc towards Maxy's mouth with eating chew animations and crumb particles.
+  - 🍓 **Feed:** Launches a 3D strawberry in a parabolic arc towards Maxy's mouth. Maxy opens wide in anticipation (`anticipating`), leans forward, and rhythmically munches (`nom nom nom`) with animated chewing, tongue movement, cheek puffs, crunchy audio effects, and bursting crumb particles.
   - 💖 **Pet / Rub:** Petting Maxy by dragging across the body triggers happy purr vibrations and floating 3D hearts.
   - 🎾 **Play:** Drops a physics-driven bouncy beach ball into the scene that can be launched and bounced around the floor.
   - 🧼 **Wash:** Spawns a multi-bubble soap bath that cleanses dirt spots and leaves Maxy sparkling clean.

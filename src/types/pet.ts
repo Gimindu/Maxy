@@ -4,6 +4,7 @@ export type PetMood =
   | 'super_happy' 
   | 'poked' 
   | 'eating' 
+  | 'anticipating'
   | 'sleeping' 
   | 'sleepy'
   | 'dirty'
