@@ -202,6 +202,7 @@ export function PetMesh({
       <Accessories 
         accessory={accessory} 
         petScale={[scaleRef.current.x, scaleRef.current.y, scaleRef.current.z]} 
+        isSleeping={isSleeping}
       />
     </group>
   )

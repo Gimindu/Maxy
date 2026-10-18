@@ -20,6 +20,7 @@ export const ACCESSORIES: { id: AccessoryType; name: string; emoji: string }[] =
   { id: 'cool_glasses', name: 'Cool Shades', emoji: '🕶️' },
   { id: 'halo', name: 'Angel Halo', emoji: '😇' },
   { id: 'flower', name: 'Sakura Petal', emoji: '🌸' },
+  { id: 'sleep_hat', name: 'Cozy Nightcap', emoji: '🌙' },
 ]
 
 interface CustomizerModalProps {

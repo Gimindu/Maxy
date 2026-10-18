@@ -17,6 +17,7 @@ export type AccessoryType =
   | 'cool_glasses' 
   | 'halo'
   | 'flower'
+  | 'sleep_hat'
 
 export interface PetColor {
   id: string

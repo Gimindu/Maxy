@@ -6,9 +6,78 @@ import { AccessoryType } from '../types/pet'
 interface AccessoriesProps {
   accessory: AccessoryType
   petScale: [number, number, number]
+  isSleeping?: boolean
 }
 
-export function Accessories({ accessory }: AccessoriesProps) {
+function SleepHat() {
+  const hatRef = useRef<THREE.Group>(null)
+  const pomRef = useRef<THREE.Group>(null)
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime()
+    if (hatRef.current) {
+      // Gentle breathing bob & tilt
+      hatRef.current.position.y = 1.15 + Math.sin(t * 1.5) * 0.02
+      hatRef.current.rotation.z = -0.15 + Math.sin(t * 1.5) * 0.03
+    }
+    if (pomRef.current) {
+      // Fluffy pom-pom dangling motion
+      pomRef.current.position.y = 0.58 + Math.sin(t * 2.2) * 0.04
+      pomRef.current.position.x = 0.78 + Math.cos(t * 1.8) * 0.03
+    }
+  })
+
+  return (
+    <group ref={hatRef} position={[0.05, 1.15, -0.05]}>
+      {/* Fluffy white cloud brim */}
+      <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[0.54, 0.12, 16, 32]} />
+        <meshStandardMaterial color="#FFFFFF" roughness={0.95} />
+      </mesh>
+
+      {/* Main nightcap body (segments curving right & down) */}
+      {/* Base segment */}
+      <mesh position={[0, 0.18, 0]} castShadow>
+        <cylinderGeometry args={[0.42, 0.5, 0.36, 20]} />
+        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
+      </mesh>
+
+      {/* Golden Moon decal on front of hat */}
+      <mesh position={[0, 0.22, 0.46]} rotation={[0, 0, -0.3]}>
+        <sphereGeometry args={[0.09, 12, 12]} />
+        <meshStandardMaterial color="#FFD166" emissive="#FFAA00" emissiveIntensity={0.6} roughness={0.3} />
+      </mesh>
+
+      {/* Mid segment (tilting right) */}
+      <mesh position={[0.12, 0.48, -0.04]} rotation={[0.08, 0, -0.42]} castShadow>
+        <cylinderGeometry args={[0.3, 0.42, 0.38, 20]} />
+        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
+      </mesh>
+
+      {/* Upper segment (tilting more right and down) */}
+      <mesh position={[0.34, 0.68, -0.08]} rotation={[0.12, 0, -0.95]} castShadow>
+        <cylinderGeometry args={[0.18, 0.3, 0.38, 20]} />
+        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
+      </mesh>
+
+      {/* Drooping tip segment (pointing down) */}
+      <mesh position={[0.58, 0.68, -0.1]} rotation={[0.1, 0, -1.95]} castShadow>
+        <cylinderGeometry args={[0.08, 0.18, 0.36, 20]} />
+        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
+      </mesh>
+
+      {/* Swaying Pom-pom at tip */}
+      <group ref={pomRef} position={[0.78, 0.58, -0.1]}>
+        <mesh castShadow>
+          <sphereGeometry args={[0.16, 16, 16]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.95} />
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
+export function Accessories({ accessory, isSleeping = false }: AccessoriesProps) {
   const haloRef = useRef<THREE.Group>(null)
   const earsRef = useRef<THREE.Group>(null)
 
@@ -24,6 +93,36 @@ export function Accessories({ accessory }: AccessoriesProps) {
       earsRef.current.children[1].rotation.z = -0.2 - Math.sin(t * 4) * 0.05
     }
   })
+
+  // When sleeping, always wear the Sleep Hat!
+  if (isSleeping) {
+    return (
+      <group>
+        <SleepHat />
+        {/* If wearing cool glasses, keep them on */}
+        {accessory === 'cool_glasses' && (
+          <group position={[0, 0.15, 1.08]}>
+            <mesh position={[-0.45, 0, 0]}>
+              <boxGeometry args={[0.42, 0.26, 0.06]} />
+              <meshStandardMaterial color="#1A181C" roughness={0.2} metalness={0.8} />
+            </mesh>
+            <mesh position={[0.45, 0, 0]}>
+              <boxGeometry args={[0.42, 0.26, 0.06]} />
+              <meshStandardMaterial color="#1A181C" roughness={0.2} metalness={0.8} />
+            </mesh>
+            <mesh position={[0, 0.04, 0]}>
+              <boxGeometry args={[0.16, 0.05, 0.06]} />
+              <meshStandardMaterial color="#1A181C" roughness={0.2} metalness={0.8} />
+            </mesh>
+          </group>
+        )}
+      </group>
+    )
+  }
+
+  if (accessory === 'sleep_hat') {
+    return <SleepHat />
+  }
 
   if (accessory === 'none') return null
 

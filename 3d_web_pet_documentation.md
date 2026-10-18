@@ -151,6 +151,7 @@ In [`faceCanvas.ts`](file:///c:/Users/GIMINDU/Videos/Projects/maxy/src/utils/fac
 
 ### 3. Modular 3D Accessories
 In [`Accessories.tsx`](file:///c:/Users/GIMINDU/Videos/Projects/maxy/src/components/Accessories.tsx):
+- **Cozy Sleep Nightcap:** Automatically equipped during sleep (or via wardrobe); features a soft cloud-fluff brim, curved nightcap body, golden crescent moon decal, and a swaying pom-pom that bobs with Maxy's breathing.
 - **Bunny Ears:** Built with capsules; harmonic sine oscillators wobble the ears as Maxy tilts.
 - **Royal Crown:** Golden metallic cylinder topped with 5 radial cones and specular ruby/sapphire jewels.
 - **Cool Shades:** Dual tinted lenses with angled specular glare bars.
