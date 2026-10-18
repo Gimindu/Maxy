@@ -20,6 +20,7 @@ interface SceneProps {
   onPet: () => void
   onTreatEaten: () => void
   onToyBounced: () => void
+  onWakeUp?: () => void
   cleanliness?: number
 }
 
@@ -36,6 +37,7 @@ export function Scene({
   onPet,
   onTreatEaten,
   onToyBounced,
+  onWakeUp,
   cleanliness,
 }: SceneProps) {
   const [ballHitCount, setBallHitCount] = useState(0)
@@ -93,6 +95,7 @@ export function Scene({
           isSleeping={isSleeping}
           cleanliness={cleanliness}
           hitCount={ballHitCount}
+          onWakeUp={onWakeUp}
         />
 
         {/* Flying Treat */}

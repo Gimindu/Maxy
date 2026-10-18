@@ -17,6 +17,7 @@ interface PetMeshProps {
   isSleeping: boolean
   cleanliness?: number
   hitCount?: number
+  onWakeUp?: () => void
 }
 
 export function PetMesh({
@@ -28,6 +29,7 @@ export function PetMesh({
   isSleeping,
   cleanliness = 100,
   hitCount = 0,
+  onWakeUp,
 }: PetMeshProps) {
   const groupRef = useRef<THREE.Group>(null)
   const [isHovered, setIsHovered] = useState(false)
@@ -259,6 +261,7 @@ export function PetMesh({
         accessory={accessory} 
         petScale={[scaleRef.current.x, scaleRef.current.y, scaleRef.current.z]} 
         isSleeping={isSleeping}
+        onWakeUp={onWakeUp}
       />
 
       {/* 3D Wash Arm & Wash Stick for washing back */}

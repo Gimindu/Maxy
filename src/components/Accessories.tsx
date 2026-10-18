@@ -1,18 +1,48 @@
-import { useRef, useMemo, useEffect } from 'react'
+import { useRef, useMemo, useEffect, useState } from 'react'
 import * as THREE from 'three'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, ThreeEvent } from '@react-three/fiber'
 import { AccessoryType } from '../types/pet'
 
 interface AccessoriesProps {
   accessory: AccessoryType
   petScale: [number, number, number]
   isSleeping?: boolean
+  onWakeUp?: () => void
 }
 
-function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
+interface SleepHatProps {
+  isSleeping?: boolean
+  onWakeUp?: () => void
+  isTumbling?: boolean
+  onTumbleChange?: (tumbling: boolean) => void
+}
+
+function SleepHat({ 
+  isSleeping = false, 
+  onWakeUp,
+  isTumbling = false,
+  onTumbleChange,
+}: SleepHatProps) {
   const hatRef = useRef<THREE.Group>(null)
-  const geomRef = useRef<THREE.BufferGeometry>(null)
   const pomRef = useRef<THREE.Group>(null)
+
+  // Drag & drop interaction state
+  const isDragging = useRef(false)
+  const hasMoved = useRef(false)
+  const dragPlane = useRef(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0))
+  const grabAnchorOffset = useRef(new THREE.Vector3())
+  const velocity = useRef(new THREE.Vector3())
+  const prevPos = useRef(new THREE.Vector3())
+  const prevTime = useRef(0)
+
+  // Spring-back recovery state if dropped without pulling away
+  const isSpringingBack = useRef(false)
+
+  // Tumble physics state on pull-off
+  const tumbleProgress = useRef(0)
+  const tumblePos = useRef(new THREE.Vector3())
+  const tumbleVel = useRef(new THREE.Vector3())
+  const tumbleRotVel = useRef(new THREE.Vector3())
 
   const rings = 22
   const radialSegments = 24
@@ -55,23 +85,196 @@ function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
   useEffect(() => {
     return () => {
       geometry.dispose()
+      document.body.style.cursor = 'auto'
     }
   }, [geometry])
 
-  useFrame((state) => {
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation()
+    if (isTumbling) return
+
+    isDragging.current = true
+    hasMoved.current = false
+    isSpringingBack.current = false
+
+    // Align drag plane with camera facing hat's world Z
+    const worldPos = new THREE.Vector3()
+    hatRef.current?.getWorldPosition(worldPos)
+    dragPlane.current.set(new THREE.Vector3(0, 0, 1), -worldPos.z)
+
+    // Raycast hit point in parent local space
+    const worldHit = new THREE.Vector3()
+    if (e.ray.intersectPlane(dragPlane.current, worldHit) && hatRef.current?.parent) {
+      const localHit = worldHit.clone()
+      hatRef.current.parent.worldToLocal(localHit)
+      grabAnchorOffset.current.copy(localHit).sub(hatRef.current.position)
+    } else {
+      grabAnchorOffset.current.set(0, 0, 0)
+    }
+
+    if (hatRef.current) {
+      prevPos.current.copy(hatRef.current.position)
+    }
+    prevTime.current = performance.now()
+    velocity.current.set(0, 0, 0)
+
+    try {
+      ;(e.target as HTMLElement)?.setPointerCapture?.(e.pointerId)
+    } catch {}
+
+    document.body.style.cursor = 'grabbing'
+
+    const handlePointerUp = () => {
+      window.removeEventListener('pointerup', handlePointerUp)
+      window.removeEventListener('pointercancel', handlePointerUp)
+      document.body.style.cursor = 'auto'
+
+      if (!isDragging.current) return
+      isDragging.current = false
+
+      const currentPos = hatRef.current ? hatRef.current.position : new THREE.Vector3(0.05, 1.15, -0.05)
+      const dispX = currentPos.x - 0.05
+      const dispY = currentPos.y - 1.15
+      const pullDist = Math.hypot(dispX, dispY)
+
+      // If dragged away from head (pull-off threshold)
+      if (hasMoved.current && (pullDist > 0.18 || dispY > 0.14 || Math.abs(dispX) > 0.16)) {
+        // Trigger wake-up callback!
+        onWakeUp?.()
+
+        // Begin tumble and fly-off animation
+        onTumbleChange?.(true)
+        tumbleProgress.current = 0
+        tumblePos.current.copy(currentPos)
+
+        // Fling velocity with forward/upward pop
+        const flingX = THREE.MathUtils.clamp(velocity.current.x * 0.75 + dispX * 2.8, -3.2, 3.2)
+        const flingY = Math.max(1.8, velocity.current.y * 0.75 + Math.max(0.6, dispY * 2.8))
+        const flingZ = THREE.MathUtils.clamp(velocity.current.z + 0.9, 0.4, 2.0)
+        tumbleVel.current.set(flingX, flingY, flingZ)
+
+        tumbleRotVel.current.set(
+          (Math.random() - 0.5) * 3 + 3.2,
+          (Math.random() - 0.5) * 4,
+          dispX > 0 ? -6.5 : 6.5
+        )
+      } else {
+        // Spring back onto head
+        isSpringingBack.current = true
+      }
+    }
+
+    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointercancel', handlePointerUp)
+  }
+
+  const handlePointerOver = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation()
+    if (!isDragging.current && !isTumbling) {
+      document.body.style.cursor = 'grab'
+    }
+  }
+
+  const handlePointerOut = () => {
+    if (!isDragging.current) {
+      document.body.style.cursor = 'auto'
+    }
+  }
+
+  useFrame((state, delta) => {
     const t = state.clock.getElapsedTime()
     const breathRate = isSleeping ? 1.2 : 2.2
     const breath = Math.sin(t * breathRate)
 
-    // Dynamic secondary cloth sway and inertia
+    const basePos = new THREE.Vector3(0.05, 1.15 + breath * 0.012, -0.05)
+    const baseRotZ = -0.06 + Math.sin(t * 1.5) * 0.02
+
+    if (isTumbling) {
+      tumbleProgress.current += delta
+      const p = Math.min(1, tumbleProgress.current / 0.75)
+
+      // Apply parabolic gravity arc
+      tumbleVel.current.y -= 9.8 * delta * 0.9
+      tumblePos.current.addScaledVector(tumbleVel.current, delta)
+
+      if (hatRef.current) {
+        hatRef.current.position.copy(tumblePos.current)
+        hatRef.current.rotation.x += tumbleRotVel.current.x * delta
+        hatRef.current.rotation.y += tumbleRotVel.current.y * delta
+        hatRef.current.rotation.z += tumbleRotVel.current.z * delta
+        // Shrink & vanish softly
+        const scale = Math.max(0.001, 1 - Math.pow(p, 2.2))
+        hatRef.current.scale.setScalar(scale)
+      }
+
+      if (p >= 1) {
+        if (hatRef.current) {
+          hatRef.current.scale.setScalar(1)
+          hatRef.current.position.copy(basePos)
+          hatRef.current.rotation.set(0, 0, baseRotZ)
+        }
+        onTumbleChange?.(false)
+      }
+      return
+    }
+
+    // Secondary cloth sway
     const sway1 = Math.sin(t * 1.8) * 0.05
     const sway2 = Math.cos(t * 2.3) * 0.04
     const droopBounce = Math.sin(t * (isSleeping ? 1.4 : 3.0)) * (isSleeping ? 0.02 : 0.035)
 
-    // Whole hat gentle head tilt & subtle breath bob
-    if (hatRef.current) {
-      hatRef.current.position.y = 1.15 + breath * 0.012
-      hatRef.current.rotation.z = -0.06 + Math.sin(t * 1.5) * 0.02
+    if (isDragging.current && hatRef.current) {
+      const worldHit = new THREE.Vector3()
+      if (state.raycaster.ray.intersectPlane(dragPlane.current, worldHit) && hatRef.current.parent) {
+        const localHit = worldHit.clone()
+        hatRef.current.parent.worldToLocal(localHit)
+        const targetPos = localHit.sub(grabAnchorOffset.current)
+
+        const dist = targetPos.distanceTo(basePos)
+        if (dist > 0.04) {
+          hasMoved.current = true
+        }
+
+        // Velocity tracking
+        const now = performance.now()
+        const dt = Math.max(1, now - prevTime.current) / 1000
+        velocity.current.x = (targetPos.x - prevPos.current.x) / dt
+        velocity.current.y = (targetPos.y - prevPos.current.y) / dt
+        velocity.current.z = (targetPos.z - prevPos.current.z) / dt
+        prevPos.current.copy(targetPos)
+        prevTime.current = now
+
+        // Clamp bounds
+        targetPos.x = THREE.MathUtils.clamp(targetPos.x, -2.4, 2.4)
+        targetPos.y = THREE.MathUtils.clamp(targetPos.y, 0.4, 3.2)
+        targetPos.z = THREE.MathUtils.clamp(targetPos.z, -0.3, 1.2)
+
+        hatRef.current.position.copy(targetPos)
+
+        // Dynamic tilt with pull
+        const pullX = targetPos.x - basePos.x
+        const pullY = targetPos.y - basePos.y
+        hatRef.current.rotation.z = baseRotZ - pullX * 0.5
+        hatRef.current.rotation.x = pullY * 0.35
+        hatRef.current.rotation.y = pullX * 0.25
+      }
+    } else if (isSpringingBack.current && hatRef.current) {
+      hatRef.current.position.lerp(basePos, 0.22)
+      hatRef.current.rotation.z = THREE.MathUtils.lerp(hatRef.current.rotation.z, baseRotZ, 0.22)
+      hatRef.current.rotation.x = THREE.MathUtils.lerp(hatRef.current.rotation.x, 0, 0.22)
+      hatRef.current.rotation.y = THREE.MathUtils.lerp(hatRef.current.rotation.y, 0, 0.22)
+
+      if (hatRef.current.position.distanceTo(basePos) < 0.008) {
+        hatRef.current.position.copy(basePos)
+        hatRef.current.rotation.set(0, 0, baseRotZ)
+        isSpringingBack.current = false
+      }
+    } else if (hatRef.current) {
+      hatRef.current.position.copy(basePos)
+      hatRef.current.rotation.z = baseRotZ
+      hatRef.current.rotation.x = 0
+      hatRef.current.rotation.y = 0
+      hatRef.current.scale.setScalar(1)
     }
 
     // Dynamic 3D spine control points for a graceful drooping curve with ZERO holes
@@ -129,7 +332,19 @@ function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
   })
 
   return (
-    <group ref={hatRef} position={[0.05, 1.15, -0.05]}>
+    <group 
+      ref={hatRef} 
+      position={[0.05, 1.15, -0.05]}
+      onPointerDown={handlePointerDown}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+    >
+      {/* Generous invisible touch target so dragging is effortless on phones and desktop */}
+      <mesh position={[0.3, 0.35, 0]}>
+        <sphereGeometry args={[0.75, 12, 12]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
       {/* Fluffy white cloud brim */}
       <mesh position={[0, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
         <torusGeometry args={[0.52, 0.13, 16, 32]} />
@@ -171,7 +386,8 @@ function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
   )
 }
 
-export function Accessories({ accessory, isSleeping = false }: AccessoriesProps) {
+export function Accessories({ accessory, isSleeping = false, onWakeUp }: AccessoriesProps) {
+  const [isHatTumbling, setIsHatTumbling] = useState(false)
   const haloRef = useRef<THREE.Group>(null)
   const earsRef = useRef<THREE.Group>(null)
 
@@ -188,11 +404,16 @@ export function Accessories({ accessory, isSleeping = false }: AccessoriesProps)
     }
   })
 
-  // When sleeping, always wear the Sleep Hat!
-  if (isSleeping) {
+  // When sleeping or nightcap is tumbling off, wear/show the Sleep Hat!
+  if (isSleeping || isHatTumbling) {
     return (
       <group>
-        <SleepHat isSleeping={isSleeping} />
+        <SleepHat 
+          isSleeping={isSleeping} 
+          onWakeUp={onWakeUp} 
+          isTumbling={isHatTumbling}
+          onTumbleChange={setIsHatTumbling}
+        />
         {/* If wearing cool glasses, keep them on */}
         {accessory === 'cool_glasses' && (
           <group position={[0, 0.15, 1.08]}>
@@ -215,7 +436,14 @@ export function Accessories({ accessory, isSleeping = false }: AccessoriesProps)
   }
 
   if (accessory === 'sleep_hat') {
-    return <SleepHat isSleeping={isSleeping} />
+    return (
+      <SleepHat 
+        isSleeping={isSleeping} 
+        onWakeUp={onWakeUp} 
+        isTumbling={isHatTumbling}
+        onTumbleChange={setIsHatTumbling}
+      />
+    )
   }
 
   if (accessory === 'none') return null

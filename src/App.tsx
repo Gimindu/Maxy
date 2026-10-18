@@ -420,6 +420,25 @@ export default function App() {
     }, 2400)
   }, [isSleeping, stats.cleanliness, stats.energy, addXP, showMessage, spawnParticles, petName])
 
+  const handleWakeUp = useCallback(() => {
+    if (isSleeping) {
+      setIsSleeping(false)
+      sound.playPoke()
+      setMood('happy')
+      spawnParticles('star', 5, [0, 0.7, 0.2])
+      spawnParticles('heart', 2, [0.2, 0.8, 0.2])
+      showMessage(`*Tug!* You pulled off ${petName}'s nightcap! Good morning! ☀️`, 3500)
+      addXP(3)
+      setTimeout(() => {
+        if (stats.energy < 30) {
+          setMood('sleepy')
+        } else {
+          setMood(stats.happiness > 80 ? 'happy' : 'idle')
+        }
+      }, 1200)
+    }
+  }, [isSleeping, stats.energy, stats.happiness, petName, showMessage, spawnParticles, addXP])
+
   const handleSleep = useCallback(() => {
     if (isSleeping) {
       // Wake up
@@ -485,6 +504,7 @@ export default function App() {
         onPet={handlePet}
         onTreatEaten={handleTreatEaten}
         onToyBounced={handleToyBounced}
+        onWakeUp={handleWakeUp}
         cleanliness={stats.cleanliness}
       />
 
