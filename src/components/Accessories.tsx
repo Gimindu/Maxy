@@ -84,24 +84,18 @@ function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
     const p6 = new THREE.Vector3(0.82 + sway1 * 1.95 + sway2, 0.32 + droopBounce * 1.6, -0.14)
 
     const curve = new THREE.CatmullRomCurve3([p0, p1, p2, p3, p4, p5, p6])
+    // Use parallel-transport Frenet frames to eliminate any 90-degree twisting glitches
+    const { normals, binormals } = curve.computeFrenetFrames(rings, false)
 
     // Update mesh vertices along the dynamic spline curve
-    const refUp = new THREE.Vector3(0, 1, 0)
     for (let r = 0; r <= rings; r++) {
       const u = r / rings
       const center = curve.getPoint(u)
-      const tangent = curve.getTangent(u).normalize()
-
-      // Calculate orthonormal Frenet frame
-      let up = refUp
-      if (Math.abs(tangent.y) > 0.88) {
-        up = new THREE.Vector3(0, 0, 1)
-      }
-      const normal = new THREE.Vector3().crossVectors(tangent, up).normalize()
-      const binormal = new THREE.Vector3().crossVectors(tangent, normal).normalize()
+      const normal = normals[r]
+      const binormal = binormals[r]
 
       // Smooth taper: base fits in fluffy cloud brim, tip fits snugly in pom-pom
-      const radius = 0.50 * Math.pow(1 - u, 0.82) + 0.042
+      const radius = 0.50 * Math.pow(1 - u, 0.82) + 0.04
 
       for (let s = 0; s <= radialSegments; s++) {
         const theta = (s / radialSegments) * Math.PI * 2
@@ -119,15 +113,15 @@ function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
       }
     }
 
-    if (geomRef.current) {
-      geomRef.current.attributes.position.needsUpdate = true
-      geomRef.current.computeVertexNormals()
-    }
+    // Flag position buffer update and recompute silky smooth lighting normals
+    const posAttr = geometry.attributes.position as THREE.BufferAttribute
+    posAttr.needsUpdate = true
+    geometry.computeVertexNormals()
 
     // Animate pom-pom seamlessly attached to the swaying tip
     if (pomRef.current) {
       const tipTangent = curve.getTangent(1.0).normalize()
-      const pomPos = p6.clone().addScaledVector(tipTangent, 0.11)
+      const pomPos = p6.clone().addScaledVector(tipTangent, 0.12)
       pomRef.current.position.copy(pomPos)
       // Delicate pom-pom secondary jiggle
       pomRef.current.scale.setScalar(1.0 + Math.sin(t * 4.5) * 0.04)
@@ -142,13 +136,12 @@ function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
         <meshStandardMaterial color="#FFFFFF" roughness={0.96} />
       </mesh>
 
-      {/* Seamless, fully animated continuous 3D nightcap mesh (ZERO holes) */}
-      <mesh castShadow receiveShadow>
-        <primitive object={geometry} ref={geomRef} attach="geometry" />
+      {/* Seamless, twist-free, fully animated continuous 3D nightcap mesh */}
+      <mesh geometry={geometry} castShadow receiveShadow>
         <meshStandardMaterial
           color="#4338CA"
-          roughness={0.72}
-          metalness={0.05}
+          roughness={0.7}
+          metalness={0.06}
           side={THREE.DoubleSide}
         />
       </mesh>
@@ -170,7 +163,7 @@ function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
       {/* Swaying fluffy Pom-pom attached seamlessly to the moving tip */}
       <group ref={pomRef} position={[0.82, 0.32, -0.14]}>
         <mesh castShadow>
-          <sphereGeometry args={[0.15, 20, 20]} />
+          <sphereGeometry args={[0.16, 20, 20]} />
           <meshStandardMaterial color="#FFFFFF" roughness={0.96} />
         </mesh>
       </group>
