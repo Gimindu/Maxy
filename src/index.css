@@ -265,11 +265,38 @@ html, body {
   position: absolute;
   top: 92px;
   left: 24px;
-  width: 210px;
+  width: 220px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.stats-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.stats-header-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text-main);
+}
+
+.stats-drag-hint {
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--accent-pink);
+  letter-spacing: 0.2px;
+  animation: pulseHint 2.4s ease-in-out infinite;
+}
+
+@keyframes pulseHint {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
 }
 
 .stat-row {
@@ -299,25 +326,91 @@ html, body {
 .stat-bar-track {
   width: 100%;
   height: 8px;
-  background: rgba(0, 0, 0, 0.07);
+  background: rgba(0, 0, 0, 0.08);
   border-radius: var(--radius-full);
-  overflow: hidden;
 }
 
 .night-theme .stat-bar-track {
   background: rgba(255, 255, 255, 0.12);
 }
 
+/* Interactive Draggable Slider Track */
+.interactive-stat-track {
+  position: relative;
+  overflow: visible;
+  height: 10px;
+  margin: 3px 0 1px 0;
+  cursor: ew-resize;
+  touch-action: none;
+  border-radius: var(--radius-full);
+  transition: background 0.2s ease;
+}
+
+.interactive-stat-track::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+  cursor: ew-resize;
+  z-index: 1;
+}
+
+.interactive-stat-track:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.night-theme .interactive-stat-track:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .stat-bar-progress {
   height: 100%;
   border-radius: var(--radius-full);
   transition: width 0.35s ease-out;
+  pointer-events: none;
+}
+
+.stat-bar-progress.is-dragging {
+  transition: none !important;
 }
 
 .heart-progress { background: linear-gradient(90deg, #FF758F, #FF4D6D); }
 .food-progress { background: linear-gradient(90deg, #FFD166, #FF9F1C); }
 .energy-progress { background: linear-gradient(90deg, #70D6FF, #2EC4B6); }
 .clean-progress { background: linear-gradient(90deg, #A0C4FF, #3A86FF); }
+
+/* Draggable Thumb Indicator */
+.stat-slider-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+  z-index: 3;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
+}
+
+.night-theme .stat-slider-thumb {
+  background: #231E37;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.interactive-stat-track:hover .stat-slider-thumb,
+.interactive-stat-track:active .stat-slider-thumb {
+  transform: translate(-50%, -50%) scale(1.22);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.32);
+}
+
+.heart-thumb { border: 2.5px solid #FF4D6D; }
+.food-thumb { border: 2.5px solid #FF9F1C; }
+.energy-thumb { border: 2.5px solid #2EC4B6; }
+.clean-thumb { border: 2.5px solid #3A86FF; }
 
 .stat-value {
   font-size: 0.72rem;
@@ -1219,7 +1312,7 @@ html, body {
   .stats-container {
     top: 76px;
     left: 12px;
-    width: 155px;
+    width: 168px;
     padding: 10px 12px;
     gap: 6px;
   }
@@ -1228,8 +1321,14 @@ html, body {
     font-size: 0.7rem;
   }
 
-  .stat-bar-track {
-    height: 6px;
+  .interactive-stat-track {
+    height: 8px;
+    margin: 2px 0 1px 0;
+  }
+
+  .stat-slider-thumb {
+    width: 14px;
+    height: 14px;
   }
 
   .stat-value {
@@ -1337,7 +1436,40 @@ html, body {
 
 @media (max-width: 380px) {
   .stats-container {
-    display: none; /* Hide on ultra-narrow screens to keep pet focal */
+    display: flex;
+    top: 66px;
+    left: 8px;
+    width: 138px;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .stats-header-title {
+    font-size: 0.72rem;
+  }
+
+  .stats-drag-hint {
+    display: none;
+  }
+
+  .stat-label {
+    font-size: 0.64rem;
+    gap: 4px;
+  }
+
+  .interactive-stat-track {
+    height: 7px;
+    margin: 2px 0;
+  }
+
+  .stat-slider-thumb {
+    width: 12px;
+    height: 12px;
+    border-width: 2px !important;
+  }
+
+  .stat-value {
+    font-size: 0.58rem;
   }
 
   .action-dock {

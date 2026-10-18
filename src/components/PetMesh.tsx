@@ -6,6 +6,7 @@ import { PetColor, PetMood, AccessoryType } from '../types/pet'
 import { DynamicFaceTexture } from '../utils/faceCanvas'
 import { Accessories } from './Accessories'
 import { WashStick3D } from './WashStick3D'
+import { DirtPatches3D } from './DirtPatches3D'
 
 interface PetMeshProps {
   mood: PetMood
@@ -14,6 +15,7 @@ interface PetMeshProps {
   onPoke: () => void
   onPet: () => void
   isSleeping: boolean
+  cleanliness?: number
 }
 
 export function PetMesh({
@@ -23,6 +25,7 @@ export function PetMesh({
   onPoke,
   onPet,
   isSleeping,
+  cleanliness = 100,
 }: PetMeshProps) {
   const groupRef = useRef<THREE.Group>(null)
   const [isHovered, setIsHovered] = useState(false)
@@ -179,7 +182,7 @@ export function PetMesh({
       gazeX = 0
       gazeY = 0
     }
-    faceGenerator.update(mood, gazeX, gazeY, delta, color.blushHex)
+    faceGenerator.update(mood, gazeX, gazeY, delta, color.blushHex, cleanliness)
   })
 
   return (
@@ -209,6 +212,9 @@ export function PetMesh({
           bumpScale={0.02}
         />
       </RoundedBox>
+
+      {/* 3D Cartoon Dirt Patches & Low Hygiene Effects */}
+      <DirtPatches3D cleanliness={cleanliness} />
 
       {/* Face plane hovering slightly in front of body */}
       <mesh position={[0, 0, 1.015]}>

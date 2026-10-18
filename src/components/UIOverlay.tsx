@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import {
   Heart,
   Utensils,
@@ -32,6 +32,7 @@ interface UIOverlayProps {
   onWash: () => void
   onSleep: () => void
   onResetStats: () => void
+  onUpdateStat?: (statKey: 'happiness' | 'hunger' | 'energy' | 'cleanliness', value: number) => void
 }
 
 export function UIOverlay({
@@ -51,9 +52,51 @@ export function UIOverlay({
   onWash,
   onSleep,
   onResetStats,
+  onUpdateStat,
 }: UIOverlayProps) {
   // Format percentage nicely
   const clamp = (val: number) => Math.max(0, Math.min(100, Math.round(val)))
+
+  const isDraggingRef = useRef<string | null>(null)
+  const [activeDragKey, setActiveDragKey] = useState<string | null>(null)
+
+  const updateStatFromPointer = (
+    e: React.PointerEvent<HTMLDivElement>,
+    key: 'happiness' | 'hunger' | 'energy' | 'cleanliness'
+  ) => {
+    if (!onUpdateStat) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+    const newVal = Math.round(ratio * 100)
+    onUpdateStat(key, newVal)
+  }
+
+  const handlePointerDown = (
+    e: React.PointerEvent<HTMLDivElement>,
+    key: 'happiness' | 'hunger' | 'energy' | 'cleanliness'
+  ) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    isDraggingRef.current = key
+    setActiveDragKey(key)
+    updateStatFromPointer(e, key)
+  }
+
+  const handlePointerMove = (
+    e: React.PointerEvent<HTMLDivElement>,
+    key: 'happiness' | 'hunger' | 'energy' | 'cleanliness'
+  ) => {
+    if (isDraggingRef.current === key) {
+      updateStatFromPointer(e, key)
+    }
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    }
+    isDraggingRef.current = null
+    setActiveDragKey(null)
+  }
 
   return (
     <div className="ui-overlay">
@@ -114,18 +157,34 @@ export function UIOverlay({
         </div>
       </header>
 
-      {/* Status Meters Card */}
+      {/* Status Meters Card with Draggable Interactive Sliders */}
       <div className="stats-container glass-card">
+        <div className="stats-header-row">
+          <span className="stats-header-title">Status</span>
+          <span className="stats-drag-hint" title="Click or drag any bar to adjust!">✨ Drag to test</span>
+        </div>
+
         {/* Happiness */}
         <div className="stat-row">
           <div className="stat-label">
             <Heart size={15} className="stat-icon heart-color" />
             <span>Happiness</span>
           </div>
-          <div className="stat-bar-track">
+          <div
+            className="stat-bar-track interactive-stat-track"
+            onPointerDown={(e) => handlePointerDown(e, 'happiness')}
+            onPointerMove={(e) => handlePointerMove(e, 'happiness')}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            title="Drag Happiness (0-100%)"
+          >
             <div
-              className="stat-bar-progress heart-progress"
+              className={`stat-bar-progress heart-progress ${activeDragKey === 'happiness' ? 'is-dragging' : ''}`}
               style={{ width: `${clamp(stats.happiness)}%` }}
+            />
+            <div
+              className="stat-slider-thumb heart-thumb"
+              style={{ left: `${clamp(stats.happiness)}%` }}
             />
           </div>
           <span className="stat-value">{clamp(stats.happiness)}%</span>
@@ -137,10 +196,21 @@ export function UIOverlay({
             <Utensils size={15} className="stat-icon food-color" />
             <span>Fullness</span>
           </div>
-          <div className="stat-bar-track">
+          <div
+            className="stat-bar-track interactive-stat-track"
+            onPointerDown={(e) => handlePointerDown(e, 'hunger')}
+            onPointerMove={(e) => handlePointerMove(e, 'hunger')}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            title="Drag Fullness (0-100%)"
+          >
             <div
-              className="stat-bar-progress food-progress"
+              className={`stat-bar-progress food-progress ${activeDragKey === 'hunger' ? 'is-dragging' : ''}`}
               style={{ width: `${clamp(stats.hunger)}%` }}
+            />
+            <div
+              className="stat-slider-thumb food-thumb"
+              style={{ left: `${clamp(stats.hunger)}%` }}
             />
           </div>
           <span className="stat-value">{clamp(stats.hunger)}%</span>
@@ -152,10 +222,21 @@ export function UIOverlay({
             <Zap size={15} className="stat-icon energy-color" />
             <span>Energy</span>
           </div>
-          <div className="stat-bar-track">
+          <div
+            className="stat-bar-track interactive-stat-track"
+            onPointerDown={(e) => handlePointerDown(e, 'energy')}
+            onPointerMove={(e) => handlePointerMove(e, 'energy')}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            title="Drag Energy (0-100%)"
+          >
             <div
-              className="stat-bar-progress energy-progress"
+              className={`stat-bar-progress energy-progress ${activeDragKey === 'energy' ? 'is-dragging' : ''}`}
               style={{ width: `${clamp(stats.energy)}%` }}
+            />
+            <div
+              className="stat-slider-thumb energy-thumb"
+              style={{ left: `${clamp(stats.energy)}%` }}
             />
           </div>
           <span className="stat-value">{clamp(stats.energy)}%</span>
@@ -167,10 +248,21 @@ export function UIOverlay({
             <Sparkles size={15} className="stat-icon clean-color" />
             <span>Hygiene</span>
           </div>
-          <div className="stat-bar-track">
+          <div
+            className="stat-bar-track interactive-stat-track"
+            onPointerDown={(e) => handlePointerDown(e, 'cleanliness')}
+            onPointerMove={(e) => handlePointerMove(e, 'cleanliness')}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            title="Drag Hygiene (0-100%)"
+          >
             <div
-              className="stat-bar-progress clean-progress"
+              className={`stat-bar-progress clean-progress ${activeDragKey === 'cleanliness' ? 'is-dragging' : ''}`}
               style={{ width: `${clamp(stats.cleanliness)}%` }}
+            />
+            <div
+              className="stat-slider-thumb clean-thumb"
+              style={{ left: `${clamp(stats.cleanliness)}%` }}
             />
           </div>
           <span className="stat-value">{clamp(stats.cleanliness)}%</span>

@@ -210,7 +210,7 @@ export default function App() {
     if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy' || mood === 'washing') {
       return
     }
-    if (stats.cleanliness < 25) {
+    if (stats.cleanliness < 35) {
       setMood('dirty')
       return
     }
@@ -434,6 +434,16 @@ export default function App() {
     }
   }, [showMessage])
 
+  const handleUpdateStat = useCallback(
+    (key: 'happiness' | 'hunger' | 'energy' | 'cleanliness', value: number) => {
+      setStats((prev) => ({
+        ...prev,
+        [key]: Math.max(0, Math.min(100, Math.round(value))),
+      }))
+    },
+    []
+  )
+
   return (
     <div
       className={`app-container ${isNightMode ? 'night-theme' : 'day-theme'} ${
@@ -454,6 +464,7 @@ export default function App() {
         onPet={handlePet}
         onTreatEaten={handleTreatEaten}
         onToyBounced={handleToyBounced}
+        cleanliness={stats.cleanliness}
       />
 
       {/* Responsive Glass UI Overlay */}
@@ -474,6 +485,7 @@ export default function App() {
         onWash={handleWash}
         onSleep={handleSleep}
         onResetStats={handleResetStats}
+        onUpdateStat={handleUpdateStat}
       />
 
       {/* Wardrobe & Customization Modal */}

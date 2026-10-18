@@ -19,6 +19,7 @@ interface SceneProps {
   onPet: () => void
   onTreatEaten: () => void
   onToyBounced: () => void
+  cleanliness?: number
 }
 
 export function Scene({
@@ -34,6 +35,7 @@ export function Scene({
   onPet,
   onTreatEaten,
   onToyBounced,
+  cleanliness,
 }: SceneProps) {
   return (
     <div className="canvas-container">
@@ -82,6 +84,7 @@ export function Scene({
           onPoke={onPoke}
           onPet={onPet}
           isSleeping={isSleeping}
+          cleanliness={cleanliness}
         />
 
         {/* Flying Treat */}

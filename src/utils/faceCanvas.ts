@@ -25,7 +25,8 @@ export class DynamicFaceTexture {
     gazeX: number, // -1 to 1
     gazeY: number, // -1 to 1
     delta: number,
-    blushColor: string = '#FF9EAA'
+    blushColor: string = '#FF9EAA',
+    cleanliness: number = 100
   ) {
     // Blinking logic
     this.blinkTimer += delta
@@ -66,6 +67,10 @@ export class DynamicFaceTexture {
     const pupilOffsetX = THREE.MathUtils.clamp(gazeX, -1, 1) * 9
     const pupilOffsetY = THREE.MathUtils.clamp(-gazeY, -1, 1) * 7
 
+    // Mouth center coordinates
+    const mouthX = width * 0.5
+    const mouthY = height * 0.56
+
     // Draw Cheeks (Blush)
     const cheekY = height * 0.55
     const leftCheekX = width * 0.24
@@ -90,14 +95,80 @@ export class DynamicFaceTexture {
     ctx.fill()
     ctx.restore()
 
-    // Dirt spots if dirty
+    // Calculate dirt intensity
+    let dirtFactor = Math.max(0, Math.min(1, (75 - cleanliness) / 55))
     if (mood === 'dirty') {
-      ctx.fillStyle = 'rgba(120, 80, 40, 0.55)'
+      dirtFactor = Math.max(dirtFactor, 0.75)
+    }
+
+    // Dirt spots and mud smudges when hygiene is low
+    if (dirtFactor > 0.05) {
+      // 1. Left cheek mud smudge & splatters
+      ctx.fillStyle = `rgba(102, 68, 34, ${0.65 * dirtFactor})`
       ctx.beginPath()
-      ctx.arc(leftEyeX - 35, eyeY - 20, 12, 0, Math.PI * 2)
-      ctx.arc(rightEyeX + 30, eyeY + 40, 16, 0, Math.PI * 2)
-      ctx.arc(width * 0.5, eyeY - 50, 14, 0, Math.PI * 2)
+      ctx.ellipse(leftCheekX - 10, cheekY - 4, 18 * dirtFactor, 12 * dirtFactor, 0.35, 0, Math.PI * 2)
       ctx.fill()
+
+      // Darker core
+      ctx.fillStyle = `rgba(74, 46, 20, ${0.8 * dirtFactor})`
+      ctx.beginPath()
+      ctx.ellipse(leftCheekX - 10, cheekY - 4, 10 * dirtFactor, 6 * dirtFactor, 0.35, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Speckles near left cheek
+      ctx.fillStyle = `rgba(90, 58, 28, ${0.7 * dirtFactor})`
+      ctx.beginPath()
+      ctx.arc(leftCheekX - 28, cheekY - 14, 3.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.arc(leftCheekX - 4, cheekY + 12, 4 * dirtFactor, 0, Math.PI * 2)
+      ctx.arc(leftCheekX - 24, cheekY + 8, 2.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 2. Right cheek grimy smudge & scratch streaks
+      ctx.fillStyle = `rgba(102, 68, 34, ${0.58 * dirtFactor})`
+      ctx.beginPath()
+      ctx.ellipse(rightCheekX + 10, cheekY - 6, 16 * dirtFactor, 10 * dirtFactor, -0.3, 0, Math.PI * 2)
+      ctx.fill()
+
+      // Cute cartoon dirt scratch streaks on right cheek
+      ctx.strokeStyle = `rgba(80, 50, 22, ${0.75 * dirtFactor})`
+      ctx.lineWidth = 3.5 * dirtFactor
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(rightCheekX + 2, cheekY - 14)
+      ctx.lineTo(rightCheekX + 22, cheekY - 5)
+      ctx.moveTo(rightCheekX + 4, cheekY - 2)
+      ctx.lineTo(rightCheekX + 25, cheekY + 7)
+      ctx.stroke()
+
+      // 3. Forehead mud dab & speckles
+      ctx.fillStyle = `rgba(95, 62, 30, ${0.62 * dirtFactor})`
+      ctx.beginPath()
+      ctx.ellipse(width * 0.44, eyeY - 46, 18 * dirtFactor, 9 * dirtFactor, -0.15, 0, Math.PI * 2)
+      ctx.fill()
+
+      ctx.beginPath()
+      ctx.arc(width * 0.54, eyeY - 40, 4.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.arc(width * 0.36, eyeY - 42, 3.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 4. Little snout / chin mud dab
+      ctx.fillStyle = `rgba(90, 56, 26, ${0.65 * dirtFactor})`
+      ctx.beginPath()
+      ctx.arc(mouthX - 20, mouthY + 14, 5 * dirtFactor, 0, Math.PI * 2)
+      ctx.arc(mouthX + 22, mouthY + 12, 4.5 * dirtFactor, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 5. Comical cartoon grime cross on forehead when very dirty
+      if (dirtFactor > 0.6) {
+        ctx.strokeStyle = `rgba(70, 42, 18, ${0.85 * dirtFactor})`
+        ctx.lineWidth = 3
+        ctx.beginPath()
+        ctx.moveTo(width * 0.62 - 7, eyeY - 44)
+        ctx.lineTo(width * 0.62 + 7, eyeY - 44)
+        ctx.moveTo(width * 0.62, eyeY - 51)
+        ctx.lineTo(width * 0.62, eyeY - 37)
+        ctx.stroke()
+      }
     }
 
     // Draw Eyes based on Mood
@@ -274,6 +345,43 @@ export class DynamicFaceTexture {
       ctx.moveTo(rightEyeX - eyeRadius, eyeY)
       ctx.lineTo(rightEyeX + eyeRadius, eyeY)
       ctx.stroke()
+    } else if (mood === 'dirty') {
+      // Troubled unkempt eyes with slight inner brow furrow and sweat drop
+      ;[leftEyeX, rightEyeX].forEach((ex) => {
+        ctx.fillStyle = '#231B26'
+        ctx.beginPath()
+        ctx.ellipse(ex + pupilOffsetX * 0.4, eyeY + pupilOffsetY * 0.4, eyeRadius * 0.95, eyeRadius * 0.95, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Highlight
+        ctx.fillStyle = '#FFFFFF'
+        ctx.beginPath()
+        ctx.arc(ex + pupilOffsetX - 7, eyeY + pupilOffsetY - 7, eyeRadius * 0.3, 0, Math.PI * 2)
+        ctx.fill()
+      })
+
+      // Little cute troubled inner brow twitches \ /
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 5
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(leftEyeX - 16, eyeY - 26)
+      ctx.lineTo(leftEyeX + 10, eyeY - 22)
+      ctx.stroke()
+
+      ctx.beginPath()
+      ctx.moveTo(rightEyeX + 16, eyeY - 26)
+      ctx.lineTo(rightEyeX - 10, eyeY - 22)
+      ctx.stroke()
+
+      // Comical blue sweat-drop near left temple
+      ctx.fillStyle = '#48CAE4'
+      ctx.beginPath()
+      ctx.moveTo(leftEyeX - 38, eyeY - 14)
+      ctx.quadraticCurveTo(leftEyeX - 44, eyeY - 2, leftEyeX - 38, eyeY + 4)
+      ctx.arc(leftEyeX - 34, eyeY + 4, 5, Math.PI * 0.8, 0.2)
+      ctx.closePath()
+      ctx.fill()
     } else {
       // Normal / Happy open shiny eyes
       ;[leftEyeX, rightEyeX].forEach((ex) => {
@@ -305,8 +413,6 @@ export class DynamicFaceTexture {
     }
 
     // Draw Mouth
-    const mouthY = height * 0.56
-    const mouthX = width * 0.5
     ctx.strokeStyle = '#2B2129'
     ctx.lineWidth = 8
     ctx.lineCap = 'round'
@@ -416,6 +522,16 @@ export class DynamicFaceTexture {
       ctx.beginPath()
       ctx.arc(mouthX, mouthY + 4, 10, 0, Math.PI * 2)
       ctx.fill()
+    } else if (mood === 'dirty' || (cleanliness < 25 && mood === 'idle')) {
+      // Adorable comical grimy squiggly mouth / pout ~
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 8
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(mouthX - 18, mouthY + 2)
+      ctx.quadraticCurveTo(mouthX - 9, mouthY - 6, mouthX, mouthY + 1)
+      ctx.quadraticCurveTo(mouthX + 9, mouthY + 8, mouthX + 18, mouthY + 2)
+      ctx.stroke()
     } else {
       // Adorable Cat mouth / :3 smile
       const curveR = 14
