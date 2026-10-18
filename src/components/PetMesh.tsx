@@ -16,6 +16,7 @@ interface PetMeshProps {
   onPet: () => void
   isSleeping: boolean
   cleanliness?: number
+  hitCount?: number
 }
 
 export function PetMesh({
@@ -26,6 +27,7 @@ export function PetMesh({
   onPet,
   isSleeping,
   cleanliness = 100,
+  hitCount = 0,
 }: PetMeshProps) {
   const groupRef = useRef<THREE.Group>(null)
   const [isHovered, setIsHovered] = useState(false)
@@ -51,6 +53,17 @@ export function PetMesh({
     scaleRef.current.set(1 / Math.sqrt(squashFactor), squashFactor, 1 / Math.sqrt(squashFactor))
     velocityRef.current.set(0, 0, 0)
   }
+
+  // React to ball bouncing off Maxy
+  const prevHitCountRef = useRef(hitCount)
+  useEffect(() => {
+    if (hitCount > 0 && hitCount !== prevHitCountRef.current) {
+      prevHitCountRef.current = hitCount
+      triggerSquish(0.68)
+      velocityRef.current.y += 0.09
+      velocityRef.current.x += (Math.random() - 0.5) * 0.12
+    }
+  }, [hitCount])
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()

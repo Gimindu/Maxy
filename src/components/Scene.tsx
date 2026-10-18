@@ -1,3 +1,4 @@
+import { useState, useCallback } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { ContactShadows } from '@react-three/drei'
 import { PetColor, PetMood, AccessoryType, FloatingParticleData } from '../types/pet'
@@ -37,6 +38,12 @@ export function Scene({
   onToyBounced,
   cleanliness,
 }: SceneProps) {
+  const [ballHitCount, setBallHitCount] = useState(0)
+
+  const handleBallHitMaxy = useCallback(() => {
+    setBallHitCount((prev) => prev + 1)
+  }, [])
+
   return (
     <div className="canvas-container">
       <Canvas
@@ -85,13 +92,18 @@ export function Scene({
           onPet={onPet}
           isSleeping={isSleeping}
           cleanliness={cleanliness}
+          hitCount={ballHitCount}
         />
 
         {/* Flying Treat */}
         <Treat3D active={isTreatActive} onEaten={onTreatEaten} />
 
         {/* Interactive Toy */}
-        <ToyBall active={isToyActive} onBounced={onToyBounced} />
+        <ToyBall
+          active={isToyActive}
+          onBounced={onToyBounced}
+          onHitMaxy={handleBallHitMaxy}
+        />
 
         {/* 3D Floating Particles */}
         <Particles3D particles={particles} />

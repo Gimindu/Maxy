@@ -345,12 +345,12 @@ export default function App() {
     }
     setIsToyActive((prev) => !prev)
     if (!isToyActive) {
-      showMessage(`Spawned a bouncy beach ball! Click it to bounce! 🎾`)
+      showMessage(`Spawned a bouncy beach ball! Hold & drag to throw it at ${petName}! 🎾`)
       sound.playPoke()
     } else {
       showMessage(`Put the toy ball away.`)
     }
-  }, [isSleeping, isToyActive, showMessage])
+  }, [isSleeping, isToyActive, petName, showMessage])
 
   const handleToyBounced = useCallback(() => {
     sound.playPoke()
