@@ -70,14 +70,14 @@ export function ToyBall({ active, onBounced, onHitMaxy }: ToyBallProps) {
       window.removeEventListener('pointerup', handleWindowPointerUp)
       window.removeEventListener('pointercancel', handleWindowPointerUp)
 
-      // Low, controlled throw momentum
-      if (vel.current.length() < 0.015) {
-        // Gentle low nudge if released almost still
-        vel.current.set((Math.random() - 0.5) * 0.04, 0.05, -0.02)
+      // Controlled throw momentum
+      if (vel.current.length() < 0.02) {
+        // Friendly natural toss if released gently
+        vel.current.set((Math.random() - 0.5) * 0.05, 0.08, -0.02)
       } else {
-        // Clamp throwing momentum so it stays low and manageable
-        vel.current.clampLength(0, 0.15)
-        vel.current.z = THREE.MathUtils.clamp(vel.current.z - 0.02, -0.08, 0.05)
+        // Controlled throw momentum: lively and responsive
+        vel.current.clampLength(0, 0.28)
+        vel.current.z = THREE.MathUtils.clamp(vel.current.z - 0.02, -0.10, 0.06)
       }
     }
 
@@ -142,17 +142,17 @@ export function ToyBall({ active, onBounced, onHitMaxy }: ToyBallProps) {
         lastPointerTime.current = now
       }
     } else {
-      // 2. IN FREE FLIGHT: Controlled Low-Bounce Physics
-      // Solid downward gravity to prevent high floaty bouncing
-      vel.current.y -= 0.0082
+      // 2. IN FREE FLIGHT: Lively Rubber Ball Physics
+      // Smooth downward gravity (clean natural arc)
+      vel.current.y -= 0.0055
 
-      // Air resistance
-      vel.current.multiplyScalar(0.992)
+      // Light air resistance
+      vel.current.multiplyScalar(0.994)
 
       // Apply velocity
       pos.current.add(vel.current)
 
-      // --- MAXY COLLISION & LOW BOUNCE BACK ---
+      // --- MAXY COLLISION & BOUNCE BACK ---
       const maxyCore = 0.48
       const maxySkin = 0.52
       const R_coll = maxySkin + ballRadius // 0.87
@@ -174,66 +174,66 @@ export function ToyBall({ active, onBounced, onHitMaxy }: ToyBallProps) {
         // Push ball out to surface immediately (prevents passing through)
         pos.current.copy(closestCore).addScaledVector(normal, R_coll + 0.006)
 
-        // Reflect velocity along collision normal with low restitution (0.52)
+        // Reflect velocity along collision normal
         const dot = vel.current.dot(normal)
         if (dot < 0) {
           vel.current.sub(normal.clone().multiplyScalar(2 * dot))
-          // Low bounce restitution
-          vel.current.multiplyScalar(0.52)
+          // Lively bounce restitution off Maxy
+          vel.current.multiplyScalar(0.72)
 
-          // Modest bounce back impulse
-          const minBounceSpeed = 0.065
+          // Nice energetic bounce back impulse
+          const minBounceSpeed = 0.095
           if (vel.current.length() < minBounceSpeed) {
             vel.current.addScaledVector(normal, minBounceSpeed)
           }
 
-          // Gentle low upward pop
-          vel.current.y += 0.015
+          // Cheerful upward bounce pop
+          vel.current.y += 0.035
 
           // Trigger visual squish and sound/stars
-          triggerImpactSquash(0.72)
+          triggerImpactSquash(0.68)
           onBounced()
           onHitMaxy?.(normal)
         }
       }
 
-      // --- FLOOR COLLISION (Low bounce & fast settling) ---
+      // --- FLOOR COLLISION (Satisfying natural bounce decay) ---
       const floorY = -1.1
       if (pos.current.y < floorY) {
         pos.current.y = floorY
-        // Settle quickly when vertical bounce is low
-        if (Math.abs(vel.current.y) > 0.035) {
-          // Low floor restitution (0.45)
-          vel.current.y = -vel.current.y * 0.45
-          vel.current.x *= 0.85
-          vel.current.z *= 0.85
-          triggerImpactSquash(0.82)
+        // Continue bouncing down to gentle micro-hops
+        if (Math.abs(vel.current.y) > 0.012) {
+          // Playful rubber ball bounce restitution (0.68)
+          vel.current.y = -vel.current.y * 0.68
+          vel.current.x *= 0.92
+          vel.current.z *= 0.92
+          triggerImpactSquash(0.78)
           onBounced()
         } else {
           // Ball settles on floor and rolls smoothly
           vel.current.y = 0
-          vel.current.x *= 0.88
-          vel.current.z *= 0.88
+          vel.current.x *= 0.94
+          vel.current.z *= 0.94
         }
       }
 
-      // --- BOUNDARY WALL BOUNCES (Low rebound) ---
+      // --- BOUNDARY WALL BOUNCES ---
       if (pos.current.x > 2.4) {
         pos.current.x = 2.4
-        vel.current.x = -Math.abs(vel.current.x) * 0.45
-        triggerImpactSquash(0.85)
+        vel.current.x = -Math.abs(vel.current.x) * 0.65
+        triggerImpactSquash(0.82)
       } else if (pos.current.x < -2.4) {
         pos.current.x = -2.4
-        vel.current.x = Math.abs(vel.current.x) * 0.45
-        triggerImpactSquash(0.85)
+        vel.current.x = Math.abs(vel.current.x) * 0.65
+        triggerImpactSquash(0.82)
       }
 
       if (pos.current.z > 1.9) {
         pos.current.z = 1.9
-        vel.current.z = -Math.abs(vel.current.z) * 0.45
+        vel.current.z = -Math.abs(vel.current.z) * 0.65
       } else if (pos.current.z < -1.3) {
         pos.current.z = -1.3
-        vel.current.z = Math.abs(vel.current.z) * 0.45
+        vel.current.z = Math.abs(vel.current.z) * 0.65
       }
     }
 
