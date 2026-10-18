@@ -372,9 +372,9 @@ export default function App() {
     setMood('washing')
     showMessage(`Scrub scrub! Washing ${petName}'s back with the bath stick! 🧼🛁✨`, 3500)
 
-    // Stream bubbles continuously off the shoulder and back during scrubbing
+    // Stream bubbles continuously off the body during scrubbing
     const bubbleInterval = setInterval(() => {
-      spawnParticles('bubble', 3, [0.65, 0.85, 0.1])
+      spawnParticles('bubble', 3, [0.55, 0.68, -0.35])
     }, 320)
 
     setTimeout(() => {
