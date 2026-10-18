@@ -76,45 +76,27 @@ class SoundManager {
     if (!this.ctx) return
 
     const now = this.ctx.currentTime
-    // Extended rhythmic munching sequence: crunch, chew, chew, munch, gulp!
-    const munchOffsets = [0, 0.28, 0.58, 0.90, 1.25, 1.62]
-    munchOffsets.forEach((offset, idx) => {
+    // Delightful, sweet, sparkling nibble chimes (kawaii & clean)
+    const notes = [523.25, 659.25, 783.99, 1046.50] // C5, E5, G5, C6 sweet major chord
+    notes.forEach((freq, idx) => {
       if (!this.ctx) return
+      const offset = idx * 0.14
       const osc = this.ctx.createOscillator()
       const gain = this.ctx.createGain()
 
-      osc.type = idx % 2 === 0 ? 'triangle' : 'sine'
-      const baseFreq = 300 + (idx % 3) * 60
-      osc.frequency.setValueAtTime(baseFreq, now + offset)
-      osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.7, now + offset + 0.06)
-      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.65, now + offset + 0.14)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, now + offset)
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.12, now + offset + 0.06)
 
-      gain.gain.setValueAtTime(0.24, now + offset)
-      gain.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.15)
+      gain.gain.setValueAtTime(0.18, now + offset)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.22)
 
       osc.connect(gain)
       gain.connect(this.ctx.destination)
 
       osc.start(now + offset)
-      osc.stop(now + offset + 0.15)
+      osc.stop(now + offset + 0.22)
     })
-
-    // Satisfied swallow gulp at 1.95s
-    setTimeout(() => {
-      if (!this.ctx || this.isMuted) return
-      const gulpNow = this.ctx.currentTime
-      const osc = this.ctx.createOscillator()
-      const gain = this.ctx.createGain()
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(440, gulpNow)
-      osc.frequency.exponentialRampToValueAtTime(620, gulpNow + 0.1)
-      gain.gain.setValueAtTime(0.18, gulpNow)
-      gain.gain.exponentialRampToValueAtTime(0.01, gulpNow + 0.18)
-      osc.connect(gain)
-      gain.connect(this.ctx.destination)
-      osc.start(gulpNow)
-      osc.stop(gulpNow + 0.18)
-    }, 1950)
   }
 
   public playSleep() {

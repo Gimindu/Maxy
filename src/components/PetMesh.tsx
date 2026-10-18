@@ -112,8 +112,8 @@ export function PetMesh({
     if (mood === 'anticipating') {
       targetY = 0 // Centered mouth height for incoming treat
     } else if (mood === 'eating') {
-      // Cheerful rhythmic munch bounce!
-      targetY = Math.sin(t * 14) * 0.038
+      // Gentle sweet happy wiggle of delight
+      targetY = Math.sin(t * 9) * 0.02
     }
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.12)
 
@@ -130,10 +130,10 @@ export function PetMesh({
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.0, 0.15)
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0.0, 0.15)
     } else if (mood === 'eating') {
-      // Joyful chewing head bobbing & jiggle
-      const chewBob = Math.sin(t * 14) * 0.038
-      const chewWiggle = Math.sin(t * 7) * 0.025
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.04 + chewBob, 0.15)
+      // Gentle sweet head sway of pure contentment
+      const chewBob = Math.sin(t * 9) * 0.02
+      const chewWiggle = Math.sin(t * 4.5) * 0.015
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.02 + chewBob, 0.15)
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, chewWiggle, 0.15)
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -chewWiggle * 0.5, 0.15)
     } else if (mood === 'sleepy') {

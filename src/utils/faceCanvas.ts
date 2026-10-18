@@ -340,62 +340,24 @@ export class DynamicFaceTexture {
       ctx.ellipse(mouthX, mouthY + 18, mWidth * 0.7, 9, 0, 0, Math.PI)
       ctx.fill()
     } else if (mood === 'eating') {
-      // Dynamic rhythmic chewing & munching mouth!
-      // Alternates between opening wide with food inside and biting shut: "om nom nom"
-      const chewCycle = Math.sin(this.chewState) * 0.5 + 0.5 // 0 (bite shut) to 1 (mouth open)
-      const mouthOpen = chewCycle > 0.22
+      // Adorable, clean, wholesome closed-mouth nibble!
+      // Gentle cheerful :3 cat mouth that softly wiggles with joyful chewing
+      const nibbleWiggle = Math.sin(this.chewState * 1.6) * 1.8
+      const curveR = 13
 
-      if (mouthOpen) {
-        // Open munch cavern
-        const openProgress = (chewCycle - 0.22) / 0.78
-        const chewWidth = 14 + openProgress * 9
-        const chewHeight = 6 + openProgress * 19
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 8
+      ctx.lineCap = 'round'
 
-        // Dark inner mouth cavern
-        ctx.fillStyle = '#2B1D28'
-        ctx.beginPath()
-        ctx.ellipse(mouthX, mouthY + 5, chewWidth, chewHeight, 0, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.stroke()
-
-        // Strawberry morsels inside mouth being chewed
-        ctx.fillStyle = '#FF2A55'
-        ctx.beginPath()
-        ctx.arc(mouthX - 4, mouthY + 3, 3.5, 0, Math.PI * 2)
-        ctx.arc(mouthX + 5, mouthY + 6, 3, 0, Math.PI * 2)
-        ctx.fill()
-
-        // Cute animated pink tongue
-        ctx.fillStyle = '#FF758F'
-        const tongueWiggle = Math.cos(this.chewState * 2) * 3
-        ctx.beginPath()
-        ctx.ellipse(mouthX + tongueWiggle, mouthY + 5 + chewHeight * 0.45, chewWidth * 0.7, chewHeight * 0.42, 0, 0, Math.PI)
-        ctx.fill()
-      } else {
-        // Bite-down chomp! Closed wavy munching cat-lips :3
-        ctx.strokeStyle = '#2B2129'
-        ctx.lineWidth = 9
-        ctx.lineCap = 'round'
-
-        const curveR = 12
-        ctx.beginPath()
-        ctx.arc(mouthX - curveR + 1, mouthY + 5, curveR, 0.2, Math.PI * 0.85)
-        ctx.stroke()
-
-        ctx.beginPath()
-        ctx.arc(mouthX + curveR - 1, mouthY + 5, curveR, 0.15, Math.PI * 0.8)
-        ctx.stroke()
-      }
-
-      // Food strawberry crumbs jumping around mouth while munching!
-      const crumbHop = Math.sin(this.chewState * 2) * 3
-      ctx.fillStyle = '#FF2A55'
+      // Left cute smile arc
       ctx.beginPath()
-      ctx.arc(mouthX - 22, mouthY + 2 + crumbHop, 3, 0, Math.PI * 2)
-      ctx.arc(mouthX + 24, mouthY + 6 - crumbHop, 2.5, 0, Math.PI * 2)
-      ctx.arc(mouthX + 18, mouthY - 7 + crumbHop, 2.2, 0, Math.PI * 2)
-      ctx.arc(mouthX - 16, mouthY + 12 - crumbHop, 2, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.arc(mouthX - curveR + 1, mouthY - 3 + nibbleWiggle, curveR, 0.2, Math.PI * 0.85)
+      ctx.stroke()
+
+      // Right cute smile arc
+      ctx.beginPath()
+      ctx.arc(mouthX + curveR - 1, mouthY - 3 - nibbleWiggle, curveR, 0.15, Math.PI * 0.8)
+      ctx.stroke()
     } else if (mood === 'super_happy') {
       // Big open happy mouth with tongue
       ctx.fillStyle = '#FF5277'
