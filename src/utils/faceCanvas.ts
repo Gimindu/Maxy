@@ -121,8 +121,14 @@ export class DynamicFaceTexture {
       ctx.lineWidth = 10
       ctx.lineCap = 'round'
 
+      // Left eye
       ctx.beginPath()
       ctx.arc(leftEyeX, eyeY + 4 + chewSquint, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
+      ctx.stroke()
+
+      // Right eye
+      ctx.beginPath()
+      ctx.arc(rightEyeX, eyeY + 4 + chewSquint, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
 
     } else if (mood === 'washing') {
