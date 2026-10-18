@@ -345,7 +345,7 @@ export default function App() {
     }
     setIsToyActive((prev) => !prev)
     if (!isToyActive) {
-      showMessage(`Spawned a bouncy beach ball! Hold & drag to throw it at ${petName}! 🎾`)
+      showMessage(`Spawned a red toy ball! Hold & drag to throw it at ${petName}! 🔴`)
       sound.playPoke()
     } else {
       showMessage(`Put the toy ball away.`)
