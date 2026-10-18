@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useMemo, useEffect } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { AccessoryType } from '../types/pet'
@@ -9,68 +9,169 @@ interface AccessoriesProps {
   isSleeping?: boolean
 }
 
-function SleepHat() {
+function SleepHat({ isSleeping = false }: { isSleeping?: boolean }) {
   const hatRef = useRef<THREE.Group>(null)
+  const geomRef = useRef<THREE.BufferGeometry>(null)
   const pomRef = useRef<THREE.Group>(null)
+
+  const rings = 22
+  const radialSegments = 24
+
+  // Pre-allocate geometry with indices and UVs for the smooth, continuous watertight nightcap cone
+  const { geometry, positionsArray } = useMemo(() => {
+    const geom = new THREE.BufferGeometry()
+    const vertexCount = (rings + 1) * (radialSegments + 1)
+    const positions = new Float32Array(vertexCount * 3)
+    const uvs = new Float32Array(vertexCount * 2)
+    const indices: number[] = []
+
+    for (let r = 0; r <= rings; r++) {
+      const v = r / rings
+      for (let s = 0; s <= radialSegments; s++) {
+        const u = s / radialSegments
+        const idx = r * (radialSegments + 1) + s
+        uvs[idx * 2] = u
+        uvs[idx * 2 + 1] = v
+      }
+    }
+
+    for (let r = 0; r < rings; r++) {
+      for (let s = 0; s < radialSegments; s++) {
+        const a = r * (radialSegments + 1) + s
+        const b = (r + 1) * (radialSegments + 1) + s
+        const c = (r + 1) * (radialSegments + 1) + (s + 1)
+        const d = r * (radialSegments + 1) + (s + 1)
+        indices.push(a, b, d)
+        indices.push(b, c, d)
+      }
+    }
+
+    geom.setIndex(indices)
+    geom.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geom.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
+    return { geometry: geom, positionsArray: positions }
+  }, [rings, radialSegments])
+
+  useEffect(() => {
+    return () => {
+      geometry.dispose()
+    }
+  }, [geometry])
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime()
+    const breathRate = isSleeping ? 1.2 : 2.2
+    const breath = Math.sin(t * breathRate)
+
+    // Dynamic secondary cloth sway and inertia
+    const sway1 = Math.sin(t * 1.8) * 0.05
+    const sway2 = Math.cos(t * 2.3) * 0.04
+    const droopBounce = Math.sin(t * (isSleeping ? 1.4 : 3.0)) * (isSleeping ? 0.02 : 0.035)
+
+    // Whole hat gentle head tilt & subtle breath bob
     if (hatRef.current) {
-      // Gentle breathing bob & tilt
-      hatRef.current.position.y = 1.15 + Math.sin(t * 1.5) * 0.02
-      hatRef.current.rotation.z = -0.15 + Math.sin(t * 1.5) * 0.03
+      hatRef.current.position.y = 1.15 + breath * 0.012
+      hatRef.current.rotation.z = -0.06 + Math.sin(t * 1.5) * 0.02
     }
+
+    // Dynamic 3D spine control points for a graceful drooping curve with ZERO holes
+    const p0 = new THREE.Vector3(0, 0.02, 0)
+    const p1 = new THREE.Vector3(0.02, 0.22, -0.01)
+    const p2 = new THREE.Vector3(0.08 + sway1 * 0.35, 0.44 + breath * 0.01, -0.03)
+    const p3 = new THREE.Vector3(0.24 + sway1 * 0.75, 0.62 + breath * 0.015, -0.06)
+    const p4 = new THREE.Vector3(0.48 + sway1 * 1.15, 0.64 + droopBounce * 0.7, -0.09)
+    const p5 = new THREE.Vector3(0.68 + sway1 * 1.55, 0.50 + droopBounce * 1.2, -0.12)
+    const p6 = new THREE.Vector3(0.82 + sway1 * 1.95 + sway2, 0.32 + droopBounce * 1.6, -0.14)
+
+    const curve = new THREE.CatmullRomCurve3([p0, p1, p2, p3, p4, p5, p6])
+
+    // Update mesh vertices along the dynamic spline curve
+    const refUp = new THREE.Vector3(0, 1, 0)
+    for (let r = 0; r <= rings; r++) {
+      const u = r / rings
+      const center = curve.getPoint(u)
+      const tangent = curve.getTangent(u).normalize()
+
+      // Calculate orthonormal Frenet frame
+      let up = refUp
+      if (Math.abs(tangent.y) > 0.88) {
+        up = new THREE.Vector3(0, 0, 1)
+      }
+      const normal = new THREE.Vector3().crossVectors(tangent, up).normalize()
+      const binormal = new THREE.Vector3().crossVectors(tangent, normal).normalize()
+
+      // Smooth taper: base fits in fluffy cloud brim, tip fits snugly in pom-pom
+      const radius = 0.50 * Math.pow(1 - u, 0.82) + 0.042
+
+      for (let s = 0; s <= radialSegments; s++) {
+        const theta = (s / radialSegments) * Math.PI * 2
+        const cos = Math.cos(theta)
+        const sin = Math.sin(theta)
+
+        const vx = center.x + radius * (cos * normal.x + sin * binormal.x)
+        const vy = center.y + radius * (cos * normal.y + sin * binormal.y)
+        const vz = center.z + radius * (cos * normal.z + sin * binormal.z)
+
+        const idx = (r * (radialSegments + 1) + s) * 3
+        positionsArray[idx] = vx
+        positionsArray[idx + 1] = vy
+        positionsArray[idx + 2] = vz
+      }
+    }
+
+    if (geomRef.current) {
+      geomRef.current.attributes.position.needsUpdate = true
+      geomRef.current.computeVertexNormals()
+    }
+
+    // Animate pom-pom seamlessly attached to the swaying tip
     if (pomRef.current) {
-      // Fluffy pom-pom dangling motion
-      pomRef.current.position.y = 0.58 + Math.sin(t * 2.2) * 0.04
-      pomRef.current.position.x = 0.78 + Math.cos(t * 1.8) * 0.03
+      const tipTangent = curve.getTangent(1.0).normalize()
+      const pomPos = p6.clone().addScaledVector(tipTangent, 0.11)
+      pomRef.current.position.copy(pomPos)
+      // Delicate pom-pom secondary jiggle
+      pomRef.current.scale.setScalar(1.0 + Math.sin(t * 4.5) * 0.04)
     }
   })
 
   return (
     <group ref={hatRef} position={[0.05, 1.15, -0.05]}>
       {/* Fluffy white cloud brim */}
-      <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <torusGeometry args={[0.54, 0.12, 16, 32]} />
-        <meshStandardMaterial color="#FFFFFF" roughness={0.95} />
+      <mesh position={[0, 0.04, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <torusGeometry args={[0.52, 0.13, 16, 32]} />
+        <meshStandardMaterial color="#FFFFFF" roughness={0.96} />
       </mesh>
 
-      {/* Main nightcap body (segments curving right & down) */}
-      {/* Base segment */}
-      <mesh position={[0, 0.18, 0]} castShadow>
-        <cylinderGeometry args={[0.42, 0.5, 0.36, 20]} />
-        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
+      {/* Seamless, fully animated continuous 3D nightcap mesh (ZERO holes) */}
+      <mesh castShadow receiveShadow>
+        <primitive object={geometry} ref={geomRef} attach="geometry" />
+        <meshStandardMaterial
+          color="#4338CA"
+          roughness={0.72}
+          metalness={0.05}
+          side={THREE.DoubleSide}
+        />
       </mesh>
 
       {/* Golden Moon decal on front of hat */}
-      <mesh position={[0, 0.22, 0.46]} rotation={[0, 0, -0.3]}>
-        <sphereGeometry args={[0.09, 12, 12]} />
-        <meshStandardMaterial color="#FFD166" emissive="#FFAA00" emissiveIntensity={0.6} roughness={0.3} />
-      </mesh>
-
-      {/* Mid segment (tilting right) */}
-      <mesh position={[0.12, 0.48, -0.04]} rotation={[0.08, 0, -0.42]} castShadow>
-        <cylinderGeometry args={[0.3, 0.42, 0.38, 20]} />
-        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
-      </mesh>
-
-      {/* Upper segment (tilting more right and down) */}
-      <mesh position={[0.34, 0.68, -0.08]} rotation={[0.12, 0, -0.95]} castShadow>
-        <cylinderGeometry args={[0.18, 0.3, 0.38, 20]} />
-        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
-      </mesh>
-
-      {/* Drooping tip segment (pointing down) */}
-      <mesh position={[0.58, 0.68, -0.1]} rotation={[0.1, 0, -1.95]} castShadow>
-        <cylinderGeometry args={[0.08, 0.18, 0.36, 20]} />
-        <meshStandardMaterial color="#6C5CE7" roughness={0.8} />
-      </mesh>
-
-      {/* Swaying Pom-pom at tip */}
-      <group ref={pomRef} position={[0.78, 0.58, -0.1]}>
+      <group position={[0, 0.16, 0.50]} rotation={[0.22, 0, -0.2]}>
         <mesh castShadow>
-          <sphereGeometry args={[0.16, 16, 16]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.95} />
+          <sphereGeometry args={[0.095, 16, 16]} />
+          <meshStandardMaterial
+            color="#FFD166"
+            emissive="#FFAA00"
+            emissiveIntensity={0.65}
+            roughness={0.25}
+            metalness={0.4}
+          />
+        </mesh>
+      </group>
+
+      {/* Swaying fluffy Pom-pom attached seamlessly to the moving tip */}
+      <group ref={pomRef} position={[0.82, 0.32, -0.14]}>
+        <mesh castShadow>
+          <sphereGeometry args={[0.15, 20, 20]} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.96} />
         </mesh>
       </group>
     </group>
@@ -98,7 +199,7 @@ export function Accessories({ accessory, isSleeping = false }: AccessoriesProps)
   if (isSleeping) {
     return (
       <group>
-        <SleepHat />
+        <SleepHat isSleeping={isSleeping} />
         {/* If wearing cool glasses, keep them on */}
         {accessory === 'cool_glasses' && (
           <group position={[0, 0.15, 1.08]}>
@@ -121,7 +222,7 @@ export function Accessories({ accessory, isSleeping = false }: AccessoriesProps)
   }
 
   if (accessory === 'sleep_hat') {
-    return <SleepHat />
+    return <SleepHat isSleeping={isSleeping} />
   }
 
   if (accessory === 'none') return null
