@@ -207,7 +207,7 @@ export default function App() {
       return
     }
     // Protect active transient moods from being erased by stat changes
-    if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy' || mood === 'washing') {
+    if (mood === 'eating' || mood === 'anticipating' || mood === 'poked' || mood === 'super_happy' || mood === 'washing' || mood === 'full') {
       return
     }
     if (stats.cleanliness < 35) {
@@ -305,14 +305,23 @@ export default function App() {
       showMessage(`${petName} is fast asleep! Wake them first.`)
       return
     }
-    if (stats.hunger >= 98) {
-      showMessage(`${petName} is completely full and happy! 🍓`)
+    if (stats.hunger >= 85) {
+      sound.playPet()
+      setMood('full')
+      spawnParticles('heart', 4, [0, 0.45, 0.3])
+      spawnParticles('star', 3, [0, 0.25, 0.4])
+      showMessage(`*Pats tummy* ${petName} is completely full and shakes their head: "No more please, I'm stuffed!" 🍓💕`, 3500)
+      setTimeout(() => {
+        if (!isSleeping) {
+          setMood(stats.energy < 30 ? 'sleepy' : stats.happiness > 80 ? 'happy' : 'idle')
+        }
+      }, 2500)
       return
     }
     setIsTreatActive(true)
     setMood('anticipating')
     showMessage(`Tossing a strawberry! ${petName} opens wide! 🍓`)
-  }, [isSleeping, stats.hunger, petName, showMessage])
+  }, [isSleeping, stats.hunger, stats.energy, stats.happiness, petName, showMessage, spawnParticles])
 
   const handleTreatEaten = useCallback(() => {
     setIsTreatActive(false)

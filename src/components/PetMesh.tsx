@@ -67,6 +67,17 @@ export function PetMesh({
     }
   }, [hitCount])
 
+  // React to full tummy refusal mood
+  const prevMoodRef = useRef(mood)
+  useEffect(() => {
+    if (mood === 'full' && prevMoodRef.current !== 'full') {
+      // Chubby full tummy squish
+      scaleRef.current.set(1.15, 0.86, 1.15)
+      velocityRef.current.set(0, 0, 0)
+    }
+    prevMoodRef.current = mood
+  }, [mood])
+
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation()
     isDraggingRef.current = true
@@ -125,8 +136,8 @@ export function PetMesh({
     groupRef.current.scale.copy(scaleRef.current)
 
     // Floating position
-    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
-    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
+    const floatSpeed = isSleeping ? 1.0 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full') ? 0 : mood === 'sleepy' ? 1.2 : 2.0
+    const floatHeight = isSleeping ? 0.08 : (mood === 'anticipating' || mood === 'eating' || mood === 'washing' || mood === 'full') ? 0 : mood === 'sleepy' ? 0.09 : 0.15
     let targetY = Math.sin(t * floatSpeed) * floatHeight
     if (mood === 'anticipating') {
       targetY = 0 // Centered mouth height for incoming treat
@@ -136,6 +147,9 @@ export function PetMesh({
     } else if (mood === 'washing') {
       // Playful bath scrub wiggle
       targetY = Math.sin(t * 11) * 0.025
+    } else if (mood === 'full') {
+      // Contented belly bounce
+      targetY = Math.sin(t * 6) * 0.02
     }
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.12)
 
@@ -146,6 +160,13 @@ export function PetMesh({
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, sleepTiltZ, 0.05)
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.1, 0.05)
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.08, 0.05)
+    } else if (mood === 'full') {
+      // Cute rhythmic "no thank you!" head shake and contented belly lean
+      const headShake = Math.sin(t * 10) * 0.30
+      const tummyLean = -0.12 + Math.sin(t * 5) * 0.025
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, tummyLean, 0.15)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, headShake, 0.22)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -headShake * 0.22, 0.18)
     } else if (mood === 'anticipating') {
       // Pet faces front and center, tilting slightly forward eagerly to catch the incoming treat
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.05, 0.15)

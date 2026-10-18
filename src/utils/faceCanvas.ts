@@ -80,18 +80,19 @@ export class DynamicFaceTexture {
     const cheekRadius = width * 0.07 + chewPuff
 
     ctx.save()
-    const blushAlpha = mood === 'super_happy' ? 0.85 : mood === 'happy' ? 0.7 : 0.45
+    const blushAlpha = mood === 'super_happy' || mood === 'full' ? 0.88 : mood === 'happy' ? 0.7 : 0.45
     ctx.globalAlpha = blushAlpha
     ctx.fillStyle = blushColor
 
+    const fullPuff = mood === 'full' ? 7 : 0
     // Left blush
     ctx.beginPath()
-    ctx.ellipse(leftCheekX, cheekY, cheekRadius, cheekRadius * 0.65, 0, 0, Math.PI * 2)
+    ctx.ellipse(leftCheekX, cheekY, cheekRadius + fullPuff, (cheekRadius + fullPuff) * 0.65, 0, 0, Math.PI * 2)
     ctx.fill()
 
     // Right blush
     ctx.beginPath()
-    ctx.ellipse(rightCheekX, cheekY, cheekRadius, cheekRadius * 0.65, 0, 0, Math.PI * 2)
+    ctx.ellipse(rightCheekX, cheekY, cheekRadius + fullPuff, (cheekRadius + fullPuff) * 0.65, 0, 0, Math.PI * 2)
     ctx.fill()
     ctx.restore()
 
@@ -207,6 +208,27 @@ export class DynamicFaceTexture {
       ctx.arc(rightEyeX, eyeY + 4 + chewSquint, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
 
+    } else if (mood === 'full') {
+      // Contented stuffed eyes: joyful curved smiling arcs ^ ^ with sweet sparkles
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 10
+      ctx.lineCap = 'round'
+
+      // Left eye: cheerful curve ^
+      ctx.beginPath()
+      ctx.arc(leftEyeX, eyeY + 4, eyeRadius * 0.88, Math.PI + 0.25, -0.25)
+      ctx.stroke()
+
+      // Right eye: cheerful curve ^
+      ctx.beginPath()
+      ctx.arc(rightEyeX, eyeY + 4, eyeRadius * 0.88, Math.PI + 0.25, -0.25)
+      ctx.stroke()
+
+      // Tiny happy sparkle near the right eye
+      ctx.fillStyle = '#FFD166'
+      ctx.beginPath()
+      ctx.arc(rightEyeX + 22, eyeY - 8, 4, 0, Math.PI * 2)
+      ctx.fill()
     } else if (mood === 'washing') {
       // Blissful bath eyes: joyful curved smiling eyes ^ ^ with pure relaxation
       ctx.strokeStyle = '#2B2129'
@@ -507,6 +529,22 @@ export class DynamicFaceTexture {
       ctx.beginPath()
       ctx.arc(mouthX + 31, mouthY - 17, 3, 0, Math.PI * 2)
       ctx.fill()
+    } else if (mood === 'full') {
+      // Contented stuffed cat smile :3
+      const curveR = 13
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 8
+      ctx.lineCap = 'round'
+
+      // Left cute smile arc
+      ctx.beginPath()
+      ctx.arc(mouthX - curveR + 1, mouthY - 3, curveR, 0.2, Math.PI * 0.85)
+      ctx.stroke()
+
+      // Right cute smile arc
+      ctx.beginPath()
+      ctx.arc(mouthX + curveR - 1, mouthY - 3, curveR, 0.15, Math.PI * 0.8)
+      ctx.stroke()
     } else if (mood === 'super_happy') {
       // Big open happy mouth with tongue
       ctx.fillStyle = '#FF5277'
