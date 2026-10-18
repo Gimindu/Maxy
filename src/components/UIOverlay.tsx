@@ -59,6 +59,27 @@ export function UIOverlay({
   // Format percentage nicely
   const clamp = (val: number) => Math.max(0, Math.min(100, Math.round(val)))
 
+  const avatarEmoji =
+    mood === 'crying'
+      ? '😭'
+      : mood === 'angry'
+      ? '💢'
+      : mood === 'annoyed'
+      ? '😾'
+      : isSleeping
+      ? '💤'
+      : mood === 'eating' || mood === 'anticipating'
+      ? '🍓'
+      : mood === 'full'
+      ? '🥰'
+      : mood === 'super_happy'
+      ? '💖'
+      : mood === 'washing'
+      ? '🧼'
+      : stats.energy < 30
+      ? '🥱'
+      : '🐾'
+
   const isDraggingRef = useRef<string | null>(null)
   const [activeDragKey, setActiveDragKey] = useState<string | null>(null)
 
@@ -106,7 +127,7 @@ export function UIOverlay({
       <header className="top-bar">
         <div className="pet-identity glass-card">
           <div className="pet-name-row">
-            <span className="pet-avatar-badge">🐾</span>
+            <span className={`pet-avatar-badge ${mood === 'crying' ? 'crying-badge' : mood === 'angry' ? 'angry-badge' : ''}`}>{avatarEmoji}</span>
             <div className="pet-name-info">
               <h1 className="pet-title">{petName}</h1>
               <div className="pet-level-badge">
@@ -296,15 +317,16 @@ export function UIOverlay({
       {/* Bottom Action Dock */}
       <nav className="action-dock glass-card">
         <button
-          className="dock-btn feed-btn"
+          className={`dock-btn feed-btn ${mood === 'crying' ? 'feed-cheer-up-btn' : ''}`}
           onClick={onFeed}
           disabled={isSleeping}
-          aria-label="Feed pet treats"
+          aria-label={mood === 'crying' ? 'Cheer up crying pet with a treat' : 'Feed pet treats'}
+          title={mood === 'crying' ? 'Feed Maxy a treat to cheer them up!' : 'Feed pet treats'}
         >
           <div className="dock-icon-wrapper">
             <span className="dock-emoji">🍓</span>
           </div>
-          <span className="dock-label">Feed</span>
+          <span className="dock-label">{mood === 'crying' ? 'Cheer Up!' : 'Feed'}</span>
         </button>
 
         <button

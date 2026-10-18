@@ -10,6 +10,8 @@ export class DynamicFaceTexture {
   private chewState: number = 0
   private yawnTimer: number = 0
   private wakeTimer: number = 0
+  private cryTimer: number = 0
+  private angerTimer: number = 0
 
   constructor(size: number = 512) {
     this.canvas = document.createElement('canvas')
@@ -47,6 +49,18 @@ export class DynamicFaceTexture {
       this.wakeTimer += delta
     } else {
       this.wakeTimer = 0
+    }
+
+    if (mood === 'crying') {
+      this.cryTimer += delta
+    } else {
+      this.cryTimer = 0
+    }
+
+    if (mood === 'angry') {
+      this.angerTimer += delta
+    } else {
+      this.angerTimer = 0
     }
 
     // Yawn cycle for sleepy mood
@@ -87,11 +101,11 @@ export class DynamicFaceTexture {
     const cheekRadius = width * 0.07 + chewPuff
 
     ctx.save()
-    const blushAlpha = mood === 'super_happy' || mood === 'full' || mood === 'waking_up' ? 0.88 : mood === 'happy' ? 0.7 : 0.45
+    const blushAlpha = mood === 'super_happy' || mood === 'full' || mood === 'waking_up' ? 0.88 : (mood === 'angry' || mood === 'crying') ? 0.95 : mood === 'happy' ? 0.7 : 0.45
     ctx.globalAlpha = blushAlpha
-    ctx.fillStyle = blushColor
+    ctx.fillStyle = mood === 'angry' ? '#FF4D6D' : mood === 'crying' ? '#FF8FA3' : blushColor
 
-    const fullPuff = mood === 'full' ? 7 : 0
+    const fullPuff = mood === 'full' ? 7 : (mood === 'angry' || mood === 'crying') ? 4 : 0
     // Left blush
     ctx.beginPath()
     ctx.ellipse(leftCheekX, cheekY, cheekRadius + fullPuff, (cheekRadius + fullPuff) * 0.65, 0, 0, Math.PI * 2)
@@ -342,6 +356,163 @@ export class DynamicFaceTexture {
       ctx.lineTo(rightEyeX - 15, eyeY)
       ctx.lineTo(rightEyeX + 25, eyeY + 20)
       ctx.stroke()
+    } else if (mood === 'annoyed') {
+      // Narrowed side-eye with skeptical flat-top eyelids
+      ;[leftEyeX, rightEyeX].forEach((ex) => {
+        ctx.save()
+        // Clip to bottom 62% of eye circle
+        ctx.beginPath()
+        ctx.rect(ex - eyeRadius * 1.3, eyeY - eyeRadius * 0.15, eyeRadius * 2.6, eyeRadius * 1.5)
+        ctx.clip()
+
+        ctx.fillStyle = '#231B26'
+        ctx.beginPath()
+        ctx.ellipse(ex + pupilOffsetX * 0.5 - 4, eyeY + pupilOffsetY * 0.3, eyeRadius, eyeRadius, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Small glint
+        ctx.fillStyle = '#FFFFFF'
+        ctx.beginPath()
+        ctx.arc(ex - 8, eyeY + 4, eyeRadius * 0.22, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+
+        // Flat unamused top eyelid line
+        ctx.strokeStyle = '#2B2129'
+        ctx.lineWidth = 8
+        ctx.lineCap = 'round'
+        ctx.beginPath()
+        ctx.moveTo(ex - eyeRadius * 1.1, eyeY - eyeRadius * 0.15)
+        ctx.lineTo(ex + eyeRadius * 1.1, eyeY - eyeRadius * 0.15)
+        ctx.stroke()
+      })
+
+      // Skeptical raised / furrowed brows
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 6
+      ctx.lineCap = 'round'
+      // Left brow angled down
+      ctx.beginPath()
+      ctx.moveTo(leftEyeX - 18, eyeY - 22)
+      ctx.lineTo(leftEyeX + 12, eyeY - 17)
+      ctx.stroke()
+      // Right brow raised high in skepticism
+      ctx.beginPath()
+      ctx.moveTo(rightEyeX - 12, eyeY - 26)
+      ctx.lineTo(rightEyeX + 18, eyeY - 22)
+      ctx.stroke()
+
+    } else if (mood === 'angry') {
+      // Fierce cute anime angry eyes: sharp angled inward brows with intense stare
+      ;[leftEyeX, rightEyeX].forEach((ex, idx) => {
+        ctx.save()
+        // Sharp angled diagonal clip for intense furious expression
+        ctx.beginPath()
+        const angleDir = idx === 0 ? 1 : -1
+        ctx.moveTo(ex - angleDir * eyeRadius * 1.3, eyeY - eyeRadius * 0.5)
+        ctx.lineTo(ex + angleDir * eyeRadius * 1.3, eyeY - eyeRadius * 0.1)
+        ctx.lineTo(ex + angleDir * eyeRadius * 1.3, eyeY + eyeRadius * 1.3)
+        ctx.lineTo(ex - angleDir * eyeRadius * 1.3, eyeY + eyeRadius * 1.3)
+        ctx.closePath()
+        ctx.clip()
+
+        // Intense dark eye
+        ctx.fillStyle = '#231B26'
+        ctx.beginPath()
+        ctx.ellipse(ex, eyeY, eyeRadius * 1.05, eyeRadius * 1.05, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Pinpoint angry glint
+        ctx.fillStyle = '#FFFFFF'
+        ctx.beginPath()
+        ctx.arc(ex - 4, eyeY - 4, eyeRadius * 0.22, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.restore()
+
+        // Sharp heavy angled angry brows \ /
+        ctx.strokeStyle = '#2B2129'
+        ctx.lineWidth = 8
+        ctx.lineCap = 'round'
+        ctx.beginPath()
+        ctx.moveTo(ex - angleDir * eyeRadius * 1.25, eyeY - eyeRadius * 0.55)
+        ctx.lineTo(ex + angleDir * eyeRadius * 1.25, eyeY - eyeRadius * 0.05)
+        ctx.stroke()
+      })
+
+      // Pulsing anime 💢 anger mark on temple
+      const pulseAnger = 1 + Math.sin(this.angerTimer * 12) * 0.16
+      const markX = rightEyeX + 38
+      const markY = eyeY - 26
+      ctx.save()
+      ctx.translate(markX, markY)
+      ctx.scale(pulseAnger, pulseAnger)
+      ctx.strokeStyle = '#FF1E56'
+      ctx.lineWidth = 5.5
+      ctx.lineCap = 'round'
+      // 4 curved lines forming 💢
+      ctx.beginPath()
+      ctx.arc(-8, 0, 8, -Math.PI * 0.35, Math.PI * 0.35)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(8, 0, 8, Math.PI * 0.65, Math.PI * 1.35)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(0, -8, 8, Math.PI * 0.15, Math.PI * 0.85)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(0, 8, 8, -Math.PI * 0.85, -Math.PI * 0.15)
+      ctx.stroke()
+      ctx.restore()
+
+    } else if (mood === 'crying') {
+      // Squeezed tearful anime crying eyes: > < with streaming waterfall tears!
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 9
+      ctx.lineCap = 'round'
+
+      // Left eye squint >
+      ctx.beginPath()
+      ctx.moveTo(leftEyeX - 22, eyeY - 14)
+      ctx.lineTo(leftEyeX + 10, eyeY)
+      ctx.lineTo(leftEyeX - 22, eyeY + 14)
+      ctx.stroke()
+
+      // Right eye squint <
+      ctx.beginPath()
+      ctx.moveTo(rightEyeX + 22, eyeY - 14)
+      ctx.lineTo(rightEyeX - 10, eyeY)
+      ctx.lineTo(rightEyeX + 22, eyeY + 14)
+      ctx.stroke()
+
+      // Animated streaming waterfall tears pouring down past cheeks from both eyes!
+      const tearFlow = (this.cryTimer * 160) % 60
+      ;[leftEyeX + 4, rightEyeX - 4].forEach((tx) => {
+        const gradient = ctx.createLinearGradient(tx, eyeY + 2, tx, eyeY + 95)
+        gradient.addColorStop(0, 'rgba(112, 214, 255, 0.95)')
+        gradient.addColorStop(0.5, 'rgba(72, 202, 228, 0.95)')
+        gradient.addColorStop(1, 'rgba(0, 150, 199, 0.85)')
+
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        const wave = Math.sin(this.cryTimer * 8) * 3
+        ctx.moveTo(tx - 9 + wave, eyeY + 4)
+        ctx.quadraticCurveTo(tx - 12, eyeY + 45, tx - 14, eyeY + 90)
+        ctx.arc(tx, eyeY + 90, 14, Math.PI, 0, true)
+        ctx.quadraticCurveTo(tx + 12, eyeY + 45, tx + 9 + wave, eyeY + 4)
+        ctx.closePath()
+        ctx.fill()
+
+        // Shiny white tear glint highlights
+        ctx.fillStyle = '#FFFFFF'
+        ctx.beginPath()
+        ctx.ellipse(tx - 4, eyeY + 25 + (tearFlow % 45), 3, 7, 0, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Lower tear pool sparkle
+        ctx.beginPath()
+        ctx.arc(tx + 4, eyeY + 86, 3.5, 0, Math.PI * 2)
+        ctx.fill()
+      })
     } else if (mood === 'dizzy') {
       // Dizzy spirals or @ @
       ctx.strokeStyle = '#2B2129'
@@ -650,6 +821,63 @@ export class DynamicFaceTexture {
       ctx.fillStyle = '#3A2E39'
       ctx.beginPath()
       ctx.arc(mouthX, mouthY + 4, 10, 0, Math.PI * 2)
+      ctx.fill()
+    } else if (mood === 'annoyed') {
+      // Displeased offset wavy pout
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 8
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(mouthX - 16, mouthY + 2)
+      ctx.quadraticCurveTo(mouthX - 4, mouthY - 4, mouthX + 6, mouthY + 1)
+      ctx.lineTo(mouthX + 16, mouthY + 5)
+      ctx.stroke()
+    } else if (mood === 'angry') {
+      // Sharp angry frown /\ with tiny white cat fangs
+      ctx.fillStyle = '#2B1D28'
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 7
+      ctx.lineCap = 'round'
+
+      ctx.beginPath()
+      ctx.moveTo(mouthX - 18, mouthY + 8)
+      ctx.quadraticCurveTo(mouthX, mouthY - 4, mouthX + 18, mouthY + 8)
+      ctx.stroke()
+
+      // Cute tiny sharp white cat fangs
+      ctx.fillStyle = '#FFFFFF'
+      ctx.beginPath()
+      ctx.moveTo(mouthX - 10, mouthY + 2)
+      ctx.lineTo(mouthX - 6, mouthY + 9)
+      ctx.lineTo(mouthX - 2, mouthY + 2)
+      ctx.closePath()
+      ctx.fill()
+
+      ctx.beginPath()
+      ctx.moveTo(mouthX + 2, mouthY + 2)
+      ctx.lineTo(mouthX + 6, mouthY + 9)
+      ctx.lineTo(mouthX + 10, mouthY + 2)
+      ctx.closePath()
+      ctx.fill()
+    } else if (mood === 'crying') {
+      // Quivering weeping mouth /~\ with crying shudder
+      const shiver = Math.sin(this.cryTimer * 18) * 1.5
+      ctx.fillStyle = '#3A2E39'
+      ctx.strokeStyle = '#2B2129'
+      ctx.lineWidth = 8
+      ctx.lineCap = 'round'
+
+      ctx.beginPath()
+      ctx.moveTo(mouthX - 16, mouthY + 10)
+      ctx.quadraticCurveTo(mouthX, mouthY - 6 + shiver, mouthX + 16, mouthY + 10)
+      ctx.quadraticCurveTo(mouthX, mouthY + 16 + shiver, mouthX - 16, mouthY + 10)
+      ctx.fill()
+      ctx.stroke()
+
+      // Little trembling pink tongue inside wailing mouth
+      ctx.fillStyle = '#FF8FA3'
+      ctx.beginPath()
+      ctx.arc(mouthX, mouthY + 10 + shiver, 7, 0, Math.PI)
       ctx.fill()
     } else if (mood === 'dirty' || (cleanliness < 25 && mood === 'idle')) {
       // Adorable comical grimy squiggly mouth / pout ~

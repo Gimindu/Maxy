@@ -150,6 +150,14 @@ export function PetMesh({
           }
         }
       }
+    } else if (mood === 'angry') {
+      // Puffed up chest with indignation & huffing
+      const angerHuff = Math.sin(t * 16) * 0.035
+      targetScale = new THREE.Vector3(1.10 + angerHuff, 0.94 - angerHuff, 1.10 + angerHuff)
+    } else if (mood === 'crying') {
+      // Sorrowful weeping heaves / sobbing shudder
+      const sobPulse = Math.pow(Math.max(0, Math.sin(t * 4.5)), 4) * 0.14
+      targetScale = new THREE.Vector3(1 - sobPulse * 0.5, 1 + sobPulse, 1 - sobPulse * 0.5)
     }
 
     // Euler spring integration
@@ -193,6 +201,15 @@ export function PetMesh({
         const hopP = Math.min(1, (wakeTimerRef.current - 0.65) / 0.70)
         targetY = Math.sin(hopP * Math.PI) * 0.50
       }
+    } else if (mood === 'angry') {
+      // Agitated stomping bob
+      targetY = Math.sin(t * 18) * 0.035
+    } else if (mood === 'crying') {
+      // Heavy sorrowful weeping heave
+      targetY = -0.06 + Math.sin(t * 4.5) * 0.03
+    } else if (mood === 'annoyed') {
+      // Slight irritated twitch
+      targetY = Math.sin(t * 3.5) * 0.04
     }
     groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, targetY, 0.12)
 
@@ -256,6 +273,24 @@ export function PetMesh({
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, isExhausted ? 0.03 : 0.05)
       groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, isExhausted ? 0.035 : 0.05)
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, targetRotZ, 0.05)
+    } else if (mood === 'annoyed') {
+      // Snubbed posture: head turned away indignantly from user
+      const snubTurn = -0.38 + Math.sin(t * 1.5) * 0.04
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, snubTurn, 0.12)
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.06, 0.12)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -0.09, 0.12)
+    } else if (mood === 'angry') {
+      // Aggressive forward lean with trembling rage
+      const angerTremor = Math.sin(t * 32) * 0.03
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, angerTremor, 0.25)
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.16, 0.15)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, angerTremor * 0.5, 0.25)
+    } else if (mood === 'crying') {
+      // Hanging head low in deep sorrow with weeping shudder
+      const weepShudder = Math.sin(t * 16) * 0.02
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.22, 0.12)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, weepShudder, 0.15)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, weepShudder * 0.6, 0.15)
     } else {
       // Dynamic follow
       const targetRotY = pointer.x * 0.55
@@ -278,6 +313,18 @@ export function PetMesh({
       // Relaxed blissful gaze while facing forward
       gazeX = 0
       gazeY = 0
+    } else if (mood === 'annoyed') {
+      // Irritated side-eye glare away from cursor
+      gazeX = -0.75
+      gazeY = 0.2
+    } else if (mood === 'angry') {
+      // Fierce direct glare
+      gazeX = pointer.x * 0.8
+      gazeY = pointer.y * 0.8
+    } else if (mood === 'crying') {
+      // Downcast sorrowful weeping gaze
+      gazeX = 0
+      gazeY = -0.9
     }
     faceGenerator.update(mood, gazeX, gazeY, delta, color.blushHex, cleanliness)
   })

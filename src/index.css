@@ -629,6 +629,51 @@ html, body {
   }
 }
 
+/* Cheer Up button highlight when Maxy is crying */
+.feed-cheer-up-btn .dock-icon-wrapper {
+  background: linear-gradient(135deg, #FF6B8B, #FF8E53);
+  box-shadow: 0 0 18px rgba(255, 107, 139, 0.7);
+  animation: cheerUpPulse 1.2s infinite ease-in-out;
+  border: 2px solid #FFF;
+}
+
+.feed-cheer-up-btn .dock-label {
+  color: #FF3366;
+  font-weight: 700;
+  animation: cheerUpPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes cheerUpPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 139, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px 6px rgba(255, 107, 139, 0.6);
+    transform: scale(1.12);
+  }
+}
+
+.crying-badge {
+  animation: weepWobble 1.6s infinite ease-in-out;
+}
+
+@keyframes weepWobble {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-2px) rotate(-4deg); }
+  75% { transform: translateY(1px) rotate(4deg); }
+}
+
+.angry-badge {
+  animation: angerJitter 0.3s infinite ease-in-out;
+}
+
+@keyframes angerJitter {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-1.5px) rotate(-3deg); }
+  75% { transform: translateX(1.5px) rotate(3deg); }
+}
+
 /* ==========================================================================
    Wardrobe & Style Studio Modal (Ultra-Cute & Luxurious)
    ========================================================================== */

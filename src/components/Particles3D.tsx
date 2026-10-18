@@ -161,6 +161,81 @@ function CrumbMesh({ particle }: { particle: FloatingParticleData }) {
   )
 }
 
+function TearMesh({ particle }: { particle: FloatingParticleData }) {
+  const meshRef = useRef<THREE.Group>(null)
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.position.set(...particle.position)
+      meshRef.current.scale.setScalar(particle.scale)
+      // Slight wobbling falling droplet
+      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 8 + particle.id) * 0.15
+    }
+  })
+
+  return (
+    <group ref={meshRef} position={particle.position}>
+      {/* Upper tapered droplet cone */}
+      <mesh position={[0, 0.05, 0]}>
+        <coneGeometry args={[0.07, 0.14, 12]} />
+        <meshStandardMaterial
+          color="#48CAE4"
+          emissive="#0096C7"
+          emissiveIntensity={0.3}
+          roughness={0.1}
+          metalness={0.2}
+          transparent
+          opacity={0.88}
+        />
+      </mesh>
+      {/* Lower droplet bulb */}
+      <mesh position={[0, -0.02, 0]}>
+        <sphereGeometry args={[0.07, 12, 12]} />
+        <meshStandardMaterial
+          color="#48CAE4"
+          emissive="#0096C7"
+          emissiveIntensity={0.3}
+          roughness={0.1}
+          metalness={0.2}
+          transparent
+          opacity={0.88}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+function AngerMesh({ particle }: { particle: FloatingParticleData }) {
+  const meshRef = useRef<THREE.Group>(null)
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.position.set(...particle.position)
+      const pulse = 1 + Math.sin(state.clock.elapsedTime * 12 + particle.id) * 0.15
+      meshRef.current.scale.setScalar(particle.scale * pulse)
+      meshRef.current.rotation.z += 0.02
+    }
+  })
+
+  return (
+    <group ref={meshRef} position={particle.position}>
+      {/* Anime 💢 4-corner anger cross */}
+      <mesh position={[-0.05, 0.05, 0]}>
+        <boxGeometry args={[0.035, 0.1, 0.035]} />
+        <meshStandardMaterial color="#FF1E56" emissive="#FF0040" emissiveIntensity={0.7} />
+      </mesh>
+      <mesh position={[0.05, 0.05, 0]}>
+        <boxGeometry args={[0.035, 0.1, 0.035]} />
+        <meshStandardMaterial color="#FF1E56" emissive="#FF0040" emissiveIntensity={0.7} />
+      </mesh>
+      <mesh position={[0, 0, 0]} rotation={[0, 0, Math.PI / 2]}>
+        <boxGeometry args={[0.035, 0.16, 0.035]} />
+        <meshStandardMaterial color="#FF1E56" emissive="#FF0040" emissiveIntensity={0.7} />
+      </mesh>
+    </group>
+  )
+}
+
 export function Particles3D({ particles }: Particles3DProps) {
   return (
     <group>
@@ -170,6 +245,8 @@ export function Particles3D({ particles }: Particles3DProps) {
         if (p.type === 'bubble') return <BubbleMesh key={p.id} particle={p} />
         if (p.type === 'zzz') return <ZzzMesh key={p.id} particle={p} />
         if (p.type === 'crumb') return <CrumbMesh key={p.id} particle={p} />
+        if (p.type === 'tear') return <TearMesh key={p.id} particle={p} />
+        if (p.type === 'anger') return <AngerMesh key={p.id} particle={p} />
         return null
       })}
     </group>

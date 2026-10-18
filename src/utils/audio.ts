@@ -206,6 +206,112 @@ class SoundManager {
     osc.start(now)
     osc.stop(now + 1.15)
   }
+
+  public playAnnoyed() {
+    if (this.isMuted) return
+    this.initCtx()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(340, now)
+    osc.frequency.exponentialRampToValueAtTime(180, now + 0.18)
+
+    gain.gain.setValueAtTime(0.22, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22)
+
+    osc.connect(gain)
+    gain.connect(this.ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.22)
+  }
+
+  public playAngry() {
+    if (this.isMuted) return
+    this.initCtx()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const osc = this.ctx.createOscillator()
+    const gain = this.ctx.createGain()
+
+    osc.type = 'sawtooth'
+    osc.frequency.setValueAtTime(220, now)
+    osc.frequency.linearRampToValueAtTime(130, now + 0.28)
+
+    const filter = this.ctx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(480, now)
+
+    gain.gain.setValueAtTime(0.18, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32)
+
+    osc.connect(filter)
+    filter.connect(gain)
+    gain.connect(this.ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.32)
+  }
+
+  public playCry() {
+    if (this.isMuted) return
+    this.initCtx()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const tones = [580, 440]
+    tones.forEach((freq, idx) => {
+      if (!this.ctx) return
+      const offset = idx * 0.2
+      const osc = this.ctx.createOscillator()
+      const gain = this.ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, now + offset)
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.75, now + offset + 0.18)
+
+      gain.gain.setValueAtTime(0.17, now + offset)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.22)
+
+      osc.connect(gain)
+      gain.connect(this.ctx.destination)
+
+      osc.start(now + offset)
+      osc.stop(now + offset + 0.22)
+    })
+  }
+
+  public playCheerUp() {
+    if (this.isMuted) return
+    this.initCtx()
+    if (!this.ctx) return
+
+    const now = this.ctx.currentTime
+    const notes = [440, 554.37, 659.25, 880, 1108.73]
+    notes.forEach((freq, idx) => {
+      if (!this.ctx) return
+      const offset = idx * 0.07
+      const osc = this.ctx.createOscillator()
+      const gain = this.ctx.createGain()
+
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(freq, now + offset)
+
+      gain.gain.setValueAtTime(0.2, now + offset)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.38)
+
+      osc.connect(gain)
+      gain.connect(this.ctx.destination)
+
+      osc.start(now + offset)
+      osc.stop(now + offset + 0.38)
+    })
+  }
 }
 
 export const sound = new SoundManager()

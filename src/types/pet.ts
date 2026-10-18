@@ -12,6 +12,9 @@ export type PetMood =
   | 'washing'
   | 'full'
   | 'waking_up'
+  | 'annoyed'
+  | 'angry'
+  | 'crying'
 
 export type AccessoryType = 
   | 'none' 
@@ -42,7 +45,7 @@ export interface PetStats {
 
 export interface FloatingParticleData {
   id: number
-  type: 'heart' | 'star' | 'bubble' | 'zzz' | 'crumb'
+  type: 'heart' | 'star' | 'bubble' | 'zzz' | 'crumb' | 'tear' | 'anger'
   position: [number, number, number]
   velocity: [number, number, number]
   scale: number
