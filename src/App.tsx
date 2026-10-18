@@ -235,7 +235,18 @@ export default function App() {
   // Interactions
   const handlePoke = useCallback(() => {
     sound.playPoke()
-    if (!isSleeping) {
+    if (isSleeping) {
+      setIsSleeping(false)
+      setMood('poked')
+      showMessage(`*Poke!* ${petName} woke up! ☀️`)
+      setTimeout(() => {
+        if (stats.energy < 30) {
+          setMood('sleepy')
+        } else {
+          setMood(stats.happiness > 80 ? 'happy' : 'idle')
+        }
+      }, 700)
+    } else {
       setMood('poked')
       setTimeout(() => {
         if (stats.energy < 30) {
@@ -244,6 +255,7 @@ export default function App() {
           setMood(stats.happiness > 80 ? 'happy' : 'idle')
         }
       }, 700)
+      showMessage(`*Boing!* ${petName} wiggles cutely!`)
     }
     spawnParticles('star', 2, [0, 0.4, 0.5])
     setStats((prev) => ({
@@ -251,11 +263,16 @@ export default function App() {
       happiness: Math.min(100, prev.happiness + 2),
     }))
     addXP(1)
-    showMessage(`*Boing!* ${petName} wiggles cutely!`)
   }, [isSleeping, stats.energy, stats.happiness, addXP, showMessage, spawnParticles, petName])
 
   const handlePet = useCallback(() => {
     sound.playPet()
+    if (isSleeping) {
+      setIsSleeping(false)
+      showMessage(`*Purr...* ${petName} woke up with love! 💖`)
+    } else {
+      showMessage(`${petName} loves the gentle affection! 💖`)
+    }
     setMood('super_happy')
     spawnParticles('heart', 3, [0, 0.5, 0.2])
     setStats((prev) => ({
@@ -263,11 +280,8 @@ export default function App() {
       happiness: Math.min(100, prev.happiness + 4),
     }))
     addXP(2)
-    showMessage(`${petName} loves the gentle affection! 💖`)
     setTimeout(() => {
-      if (!isSleeping) {
-        setMood(stats.energy < 30 ? 'sleepy' : 'happy')
-      }
+      setMood(stats.energy < 30 ? 'sleepy' : 'happy')
     }, 1200)
   }, [isSleeping, stats.energy, addXP, showMessage, spawnParticles, petName])
 

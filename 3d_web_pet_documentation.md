@@ -235,8 +235,8 @@ In accordance with our responsive standards:
 
 | Action | Control (Desktop) | Control (Mobile / Touch) | Effect |
 |---|---|---|---|
-| **Poke / Squish** | Left-click on Maxy | Single tap on Maxy | Squishes body, triggers boing sound, wiggles |
-| **Pet & Stroke** | Click & drag across body | Finger swipe/rub across body | Hearts spawn, purr sound, boosts happiness |
+| **Poke / Squish** | Left-click on Maxy | Single tap on Maxy | Squishes body, wakes pet if asleep, triggers boing sound, wiggles |
+| **Pet & Stroke** | Click & drag across body | Finger swipe/rub across body | Hearts spawn, purr sound, wakes pet gently if asleep, boosts happiness |
 | **Look Around** | Move mouse across canvas | Drag around empty space | Maxy tilts and pupils track gaze |
 | **Feed 🍓** | Click **Feed** in dock | Tap **Feed** in dock | Flings strawberry, chew animation, restores fullness |
 | **Play 🎾** | Click **Play** in dock | Tap **Play** in dock | Spawns bouncy ball; click ball to launch it |
