@@ -126,28 +126,20 @@ export class DynamicFaceTexture {
       ctx.stroke()
 
     } else if (mood === 'washing') {
-      // Blissful bath eyes: happy smiling eyes with a playful wink looking back over shoulder
+      // Blissful bath eyes: joyful curved smiling eyes ^ ^ with pure relaxation
       ctx.strokeStyle = '#2B2129'
       ctx.lineWidth = 10
       ctx.lineCap = 'round'
 
-      // Left eye: cheerful wink curve ^
+      // Left eye: cheerful curve ^
       ctx.beginPath()
       ctx.arc(leftEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
       ctx.stroke()
 
-      // Right eye: sparkling open eye looking back over shoulder
-      ctx.fillStyle = '#231B26'
+      // Right eye: cheerful curve ^
       ctx.beginPath()
-      ctx.ellipse(rightEyeX - 3, eyeY + 2, eyeRadius * 0.95, eyeRadius * 1.05, 0, 0, Math.PI * 2)
-      ctx.fill()
-
-      // Sparkle highlight
-      ctx.fillStyle = '#FFFFFF'
-      ctx.beginPath()
-      ctx.arc(rightEyeX - 9, eyeY - 4, eyeRadius * 0.38, 0, Math.PI * 2)
-      ctx.arc(rightEyeX + 7, eyeY + 8, eyeRadius * 0.18, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.arc(rightEyeX, eyeY + 4, eyeRadius * 0.85, Math.PI + 0.25, -0.25)
+      ctx.stroke()
     } else if (mood === 'anticipating') {
       // Big excited open sparkling eyes focused on incoming treat!
       ;[leftEyeX, rightEyeX].forEach((ex) => {

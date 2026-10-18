@@ -141,11 +141,11 @@ export function PetMesh({
       groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, chewWiggle, 0.15)
       groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -chewWiggle * 0.5, 0.15)
     } else if (mood === 'washing') {
-      // Pet turns around ~130 degrees to present their back for washing, looking back over shoulder!
-      const washTickle = Math.sin(t * 11) * 0.03
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.04 + washTickle, 0.12)
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.PI * 0.72, 0.12)
-      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -washTickle * 0.8, 0.12)
+      // Pet stays facing forward with zero body rotation, enjoying the back scrub!
+      const washTickle = Math.sin(t * 11) * 0.025
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, -0.02 + washTickle, 0.15)
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, 0.0, 0.15)
+      groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, 0.0, 0.15)
     } else if (mood === 'sleepy') {
       // Drowsy sluggish follow with gentle tired head-drop nod
       const sleepNod = Math.sin(t * 1.4) * 0.06 + 0.05
@@ -175,9 +175,9 @@ export function PetMesh({
       gazeX = 0.45
       gazeY = -0.55
     } else if (mood === 'washing') {
-      // Eyes looking back over shoulder toward user
-      gazeX = -0.5
-      gazeY = 0.15
+      // Relaxed blissful gaze while facing forward
+      gazeX = 0
+      gazeY = 0
     }
     faceGenerator.update(mood, gazeX, gazeY, delta, color.blushHex)
   })
