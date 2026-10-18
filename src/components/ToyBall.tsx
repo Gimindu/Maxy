@@ -103,10 +103,15 @@ export function ToyBall({ active, onBounced, onHitMaxy }: ToyBallProps) {
       // 1. WHILE HOLDING: follow pointer ray smoothly on drag plane
       const hitPoint = new THREE.Vector3()
       if (state.raycaster.ray.intersectPlane(dragPlane.current, hitPoint)) {
-        // Clamp to screen bounds
-        hitPoint.x = THREE.MathUtils.clamp(hitPoint.x, -2.4, 2.4)
-        hitPoint.y = THREE.MathUtils.clamp(hitPoint.y, -1.05, 2.2)
-        hitPoint.z = THREE.MathUtils.clamp(hitPoint.z, -1.2, 1.6)
+        // Dynamic viewport at pointer depth so the ball can be dragged across the full screen
+        const vp = state.viewport.getCurrentViewport(state.camera, hitPoint)
+        const halfW = vp.width / 2 - ballRadius * 0.3
+        const topY = state.camera.position.y + vp.height / 2 - ballRadius * 0.3
+        const floorY = -1.05
+
+        hitPoint.x = THREE.MathUtils.clamp(hitPoint.x, -halfW, halfW)
+        hitPoint.y = THREE.MathUtils.clamp(hitPoint.y, floorY, topY)
+        hitPoint.z = THREE.MathUtils.clamp(hitPoint.z, -3.2, state.camera.position.z - 0.75)
 
         // Check collision with Maxy while dragging so ball cannot penetrate Maxy
         const maxyCore = 0.48
@@ -217,23 +222,46 @@ export function ToyBall({ active, onBounced, onHitMaxy }: ToyBallProps) {
         }
       }
 
-      // --- BOUNDARY WALL BOUNCES ---
-      if (pos.current.x > 2.4) {
-        pos.current.x = 2.4
-        vel.current.x = -Math.abs(vel.current.x) * 0.65
-        triggerImpactSquash(0.82)
-      } else if (pos.current.x < -2.4) {
-        pos.current.x = -2.4
-        vel.current.x = Math.abs(vel.current.x) * 0.65
-        triggerImpactSquash(0.82)
+      // --- DYNAMIC SCREEN & ROOM BOUNDARY BOUNCES ---
+      // Uses the actual screen viewport dimensions at the ball's current depth
+      const vp = state.viewport.getCurrentViewport(state.camera, pos.current)
+      const halfW = vp.width / 2 - ballRadius
+      const topY = state.camera.position.y + vp.height / 2 - ballRadius
+      const screenGlassZ = state.camera.position.z - 0.85
+      const backWallZ = -3.5
+
+      // Left & Right screen edges
+      if (pos.current.x > halfW) {
+        pos.current.x = halfW
+        vel.current.x = -Math.abs(vel.current.x) * 0.72
+        triggerImpactSquash(0.78)
+        onBounced()
+      } else if (pos.current.x < -halfW) {
+        pos.current.x = -halfW
+        vel.current.x = Math.abs(vel.current.x) * 0.72
+        triggerImpactSquash(0.78)
+        onBounced()
       }
 
-      if (pos.current.z > 1.9) {
-        pos.current.z = 1.9
-        vel.current.z = -Math.abs(vel.current.z) * 0.65
-      } else if (pos.current.z < -1.3) {
-        pos.current.z = -1.3
-        vel.current.z = Math.abs(vel.current.z) * 0.65
+      // Ceiling / Top screen edge
+      if (pos.current.y > topY) {
+        pos.current.y = topY
+        vel.current.y = -Math.abs(vel.current.y) * 0.68
+        triggerImpactSquash(0.78)
+        onBounced()
+      }
+
+      // Front screen glass: hits directly in front of the camera with realistic squish
+      if (pos.current.z > screenGlassZ) {
+        pos.current.z = screenGlassZ
+        vel.current.z = -Math.abs(vel.current.z) * 0.72
+        triggerImpactSquash(0.65)
+        onBounced()
+      } else if (pos.current.z < backWallZ) {
+        pos.current.z = backWallZ
+        vel.current.z = Math.abs(vel.current.z) * 0.70
+        triggerImpactSquash(0.80)
+        onBounced()
       }
     }
 
